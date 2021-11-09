@@ -14,37 +14,31 @@
 package tech.pegasys.teku.lightclient.client;
 
 public class Types {
-	
-	//SyncCommittee Getters & Setters
+
+  // SyncCommittee Getters & Setters
   private SyncCommittee currentSyncCommittee;
   private SyncCommittee nextSyncCommittee;
-  
-	public SyncCommittee getCurrentSyncCommittee() {
-		return currentSyncCommittee;
-	}
-	
-	public void setCurrentSyncCommittee(SyncCommittee currentSyncCommittee) {
-		this.currentSyncCommittee = currentSyncCommittee;
-	}
 
-	public SyncCommittee getNextSyncCommittee() {
-		return nextSyncCommittee;
-	}
-
-	public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
-		this.nextSyncCommittee = nextSyncCommittee;
-	}  
-
-		
-  public void LightClientSnapshot(
-		  SyncCommittee currentSyncCommittee,
-		  SyncCommittee nextSyncCommittee) {
-	  //Sync committees corresponding to the header
-	  this.setCurrentSyncCommittee(currentSyncCommittee);
-	  this.setCurrentSyncCommittee(nextSyncCommittee);
-	  
+  public SyncCommittee getCurrentSyncCommittee() {
+    return currentSyncCommittee;
   }
 
+  public void setCurrentSyncCommittee(SyncCommittee currentSyncCommittee) {
+    this.currentSyncCommittee = currentSyncCommittee;
+  }
 
-  
+  public SyncCommittee getNextSyncCommittee() {
+    return nextSyncCommittee;
+  }
+
+  public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
+    this.nextSyncCommittee = nextSyncCommittee;
+  }
+
+  public void LightClientSnapshot(
+      SyncCommittee currentSyncCommittee, SyncCommittee nextSyncCommittee) {
+    // Sync committees corresponding to the header
+    this.setCurrentSyncCommittee(currentSyncCommittee);
+    this.setCurrentSyncCommittee(nextSyncCommittee);
+  }
 }
