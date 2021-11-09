@@ -35,7 +35,7 @@ public class Types {
     this.nextSyncCommittee = nextSyncCommittee;
   }
 
-  public void LightClientSnapshot(
+  public void lightClientSnapshot(
       SyncCommittee currentSyncCommittee, SyncCommittee nextSyncCommittee) {
     // Sync committees corresponding to the header
     this.setCurrentSyncCommittee(currentSyncCommittee);
