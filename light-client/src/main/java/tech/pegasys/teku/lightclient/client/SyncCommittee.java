@@ -17,6 +17,8 @@ import tech.pegasys.teku.bls.impl.PublicKey;
 
 public class SyncCommittee {
 
+	//PubKey below is immutable 
+	//the below function is used by the lightClientSnapshot
   private PublicKey pubKey;
 
   public PublicKey getPubkey() {
