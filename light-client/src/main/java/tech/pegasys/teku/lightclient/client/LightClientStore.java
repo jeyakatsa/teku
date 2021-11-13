@@ -16,6 +16,8 @@ package tech.pegasys.teku.lightclient.client;
 public class LightClientStore {
 	
 	private LightClientSnapshot snapshot;
+	
+	//SyncPeriod and altai.LightClientUpdate needed here.
 
 	public LightClientSnapshot getSnapshot() {
 		return snapshot;
