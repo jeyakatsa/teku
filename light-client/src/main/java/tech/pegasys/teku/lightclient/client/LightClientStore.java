@@ -15,9 +15,11 @@ package tech.pegasys.teku.lightclient.client;
 
 public class LightClientStore {
 	
-	private LightClientSnapshot snapshot;
 	
-	//SyncPeriod and altai.LightClientUpdate needed here.
+	private LightClientSnapshot snapshot;
+//	private Map<SyncPeriod, LightClientUpdate> bestUpdates;
+	//ssz and spec packages to be researched in order for the above method
+	//to be implemented correctly.
 
 	public LightClientSnapshot getSnapshot() {
 		return snapshot;
@@ -28,7 +30,5 @@ public class LightClientStore {
 	}
 	
 	
-	  
-
 
 }

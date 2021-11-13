@@ -28,4 +28,7 @@ public class SyncCommittee {
   public void setPubkey(PublicKey pubKey) {
     this.pubKey = pubKey;
   }
+  
+  //PublicKeys function to be added after light client fully completed.
+  
 }
