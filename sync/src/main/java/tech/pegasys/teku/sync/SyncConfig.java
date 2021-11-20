@@ -16,6 +16,9 @@ package tech.pegasys.teku.sync;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SyncConfig {
+
+  public static final boolean DEFAULT_MULTI_PEER_SYNC_ENABLED = true;
+
   private final boolean isEnabled;
   private final boolean isMultiPeerSyncEnabled;
 
@@ -37,18 +40,32 @@ public class SyncConfig {
   }
 
   public static class Builder {
-    private Boolean isEnabled = true;
-    private Boolean isMultiPeerSyncEnabled = false;
+    private Boolean isEnabled;
+    private Boolean isMultiPeerSyncEnabled = DEFAULT_MULTI_PEER_SYNC_ENABLED;
 
     private Builder() {}
 
     public SyncConfig build() {
+      initMissingDefaults();
       return new SyncConfig(isEnabled, isMultiPeerSyncEnabled);
+    }
+
+    private void initMissingDefaults() {
+      if (isEnabled == null) {
+        isEnabled = true;
+      }
     }
 
     public Builder isSyncEnabled(final Boolean enabled) {
       checkNotNull(enabled);
       isEnabled = enabled;
+      return this;
+    }
+
+    public Builder isSyncEnabledDefault(final boolean enabled) {
+      if (isEnabled == null) {
+        isEnabled = enabled;
+      }
       return this;
     }
 

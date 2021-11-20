@@ -193,8 +193,9 @@ class Store implements UpdatableStore {
             asyncRunner, metricsSystem, "memory_states", config.getStateCacheSize());
 
     final Optional<ForkChoiceStrategy> maybeForkChoiceStrategy =
-        buildProtoArray(blockInfoByRoot, initialCheckpoint, justifiedCheckpoint, finalizedAnchor)
-            .map(ForkChoiceStrategy::initialize);
+        buildProtoArray(
+                spec, blockInfoByRoot, initialCheckpoint, justifiedCheckpoint, finalizedAnchor)
+            .map(protoArray -> ForkChoiceStrategy.initialize(spec, protoArray));
 
     final BlockMetadataStore blockMetadataStore =
         maybeForkChoiceStrategy
@@ -239,7 +240,8 @@ class Store implements UpdatableStore {
             checkpointStateTaskQueue);
     if (maybeForkChoiceStrategy.isEmpty()) {
       final ForkChoiceStrategy forkChoiceStrategy =
-          ForkChoiceStrategy.initializeAndMigrateStorage(store, protoArrayStorageChannel).join();
+          ForkChoiceStrategy.initializeAndMigrateStorage(spec, store, protoArrayStorageChannel)
+              .join();
       store.blockMetadata = forkChoiceStrategy;
       store.forkChoiceStrategy = forkChoiceStrategy;
     } else {
@@ -249,6 +251,7 @@ class Store implements UpdatableStore {
   }
 
   private static Optional<ProtoArray> buildProtoArray(
+      final Spec spec,
       final Map<Bytes32, StoredBlockMetadata> blockInfoByRoot,
       final Optional<Checkpoint> initialCheckpoint,
       final Checkpoint justifiedCheckpoint,
@@ -272,7 +275,8 @@ class Store implements UpdatableStore {
           block.getParentRoot(),
           block.getStateRoot(),
           block.getCheckpointEpochs().get().getJustifiedEpoch(),
-          block.getCheckpointEpochs().get().getFinalizedEpoch());
+          block.getCheckpointEpochs().get().getFinalizedEpoch(),
+          spec.isBlockProcessorOptimistic(block.getBlockSlot()));
     }
     return Optional.of(protoArray);
   }

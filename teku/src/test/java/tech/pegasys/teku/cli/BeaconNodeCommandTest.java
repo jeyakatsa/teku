@@ -18,12 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hyperledger.besu.metrics.StandardMetricCategory.JVM;
 import static org.hyperledger.besu.metrics.StandardMetricCategory.PROCESS;
 import static tech.pegasys.teku.cli.BeaconNodeCommand.CONFIG_FILE_OPTION_NAME;
-import static tech.pegasys.teku.cli.BeaconNodeCommand.LOG_FILE;
-import static tech.pegasys.teku.cli.BeaconNodeCommand.LOG_PATTERN;
+import static tech.pegasys.teku.cli.BeaconNodeCommand.LOG_FILE_PREFIX;
 import static tech.pegasys.teku.cli.OSUtils.SLASH;
-import static tech.pegasys.teku.cli.options.MetricsOptions.DEFAULT_METRICS_CATEGORIES;
 import static tech.pegasys.teku.infrastructure.logging.LoggingDestination.BOTH;
 import static tech.pegasys.teku.infrastructure.logging.LoggingDestination.DEFAULT_BOTH;
+import static tech.pegasys.teku.infrastructure.metrics.MetricsConfig.DEFAULT_METRICS_CATEGORIES;
 import static tech.pegasys.teku.infrastructure.metrics.TekuMetricCategory.BEACON;
 import static tech.pegasys.teku.infrastructure.metrics.TekuMetricCategory.EVENTBUS;
 import static tech.pegasys.teku.infrastructure.metrics.TekuMetricCategory.LIBP2P;
@@ -48,8 +47,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import picocli.CommandLine;
-import tech.pegasys.teku.cli.options.BeaconRestApiOptions;
+import tech.pegasys.teku.beaconrestapi.BeaconRestApiConfig;
 import tech.pegasys.teku.config.TekuConfiguration;
+import tech.pegasys.teku.infrastructure.logging.LoggingConfig;
 import tech.pegasys.teku.infrastructure.version.VersionProvider;
 import tech.pegasys.teku.networking.nat.NatMethod;
 import tech.pegasys.teku.networks.Eth2NetworkConfiguration;
@@ -61,6 +61,11 @@ import tech.pegasys.teku.validator.api.InteropConfig;
 import tech.pegasys.teku.validator.api.ValidatorPerformanceTrackingMode;
 
 public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
+
+  private static final String LOG_FILE =
+      LOG_FILE_PREFIX + LoggingConfig.DEFAULT_LOG_FILE_NAME_SUFFIX;
+  private static final String LOG_PATTERN =
+      LOG_FILE_PREFIX + LoggingConfig.DEFAULT_LOG_FILE_NAME_PATTERN_SUFFIX;
 
   final Eth1Address address =
       Eth1Address.fromHexString("0x77f7bED277449F51505a4C54550B074030d989bC");
@@ -253,6 +258,12 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
     assertThat(config.isInteropEnabled()).isTrue();
   }
 
+  @Test
+  public void checkThatNoCLIArgumentsYieldsDefaultConfig() {
+    beaconNodeCommand.parse(new String[0]);
+    assertTekuConfiguration(createConfigBuilder().build());
+  }
+
   @ParameterizedTest(name = "{0}")
   @ValueSource(
       strings = {
@@ -404,8 +415,6 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
       "http://localhost:8545",
       "--Xee-endpoint",
       "http://localhost:8550",
-      "--Xee-fee-recipient-address",
-      "0x00220204f295DbB79fbBe619dd1B94463800F9D9",
       "--metrics-enabled",
       "false",
       "--metrics-port",
@@ -441,7 +450,7 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
 
     return expectedConfigurationBuilder()
         .eth2NetworkConfig(b -> b.applyNetworkDefaults("mainnet"))
-        .executionEngine(b -> b.feeRecipient((String) null).endpoints(new ArrayList<String>()))
+        .executionEngine(b -> b.endpoint(null))
         .powchain(
             b -> {
               b.depositContract(networkConfig.getEth1DepositContractAddress());
@@ -453,8 +462,8 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
         .logging(
             b ->
                 b.destination(DEFAULT_BOTH)
-                    .logFile(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
-                    .logFileNamePattern(
+                    .logPath(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
+                    .logPathPattern(
                         StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_PATTERN)))
         .metrics(
             b -> b.metricsCategories(DEFAULT_METRICS_CATEGORIES).metricsPublicationInterval(60))
@@ -483,18 +492,15 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
         .logging(
             b ->
                 b.destination(BOTH)
-                    .logFile(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
-                    .logFileNamePattern(
+                    .logPath(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
+                    .logPathPattern(
                         StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_PATTERN)));
   }
 
   private TekuConfiguration.Builder expectedConfigurationBuilder() {
     return TekuConfiguration.builder()
         .eth2NetworkConfig(b -> b.applyMinimalNetworkDefaults().eth1DepositContractAddress(address))
-        .executionEngine(
-            b ->
-                b.feeRecipient("0x00220204f295DbB79fbBe619dd1B94463800F9D9")
-                    .endpoints(List.of("http://localhost:8550")))
+        .executionEngine(b -> b.endpoint("http://localhost:8550"))
         .powchain(
             b ->
                 b.eth1Endpoints(List.of("http://localhost:8545"))
@@ -543,7 +549,7 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
                     .restApiCorsAllowedOrigins(new ArrayList<>())
                     .eth1DepositContractAddress(address)
                     .maxUrlLength(65535)
-                    .maxPendingEvents(BeaconRestApiOptions.DEFAULT_MAX_EVENT_QUEUE_SIZE)
+                    .maxPendingEvents(BeaconRestApiConfig.DEFAULT_MAX_EVENT_QUEUE_SIZE)
                     .validatorThreads(1))
         .validatorApi(
             b ->
@@ -565,8 +571,8 @@ public class BeaconNodeCommandTest extends AbstractBeaconNodeCommandTest {
             b ->
                 b.colorEnabled(true)
                     .destination(DEFAULT_BOTH)
-                    .logFile(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
-                    .logFileNamePattern(
+                    .logPath(StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_FILE))
+                    .logPathPattern(
                         StringUtils.joinWith(SLASH, dataPath.toString(), "logs", LOG_PATTERN))
                     .includeEventsEnabled(true)
                     .includeValidatorDutiesEnabled(true))

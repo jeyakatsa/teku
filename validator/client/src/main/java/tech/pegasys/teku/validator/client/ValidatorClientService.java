@@ -35,6 +35,7 @@ import tech.pegasys.teku.service.serviceutils.ServiceConfig;
 import tech.pegasys.teku.service.serviceutils.layout.DataDirLayout;
 import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.SpecMilestone;
+import tech.pegasys.teku.spec.datastructures.eth1.Eth1Address;
 import tech.pegasys.teku.validator.api.ValidatorApiChannel;
 import tech.pegasys.teku.validator.api.ValidatorTimingChannel;
 import tech.pegasys.teku.validator.beaconnode.BeaconNodeApi;
@@ -152,7 +153,10 @@ public class ValidatorClientService extends Service {
         slashingProtector,
         new PublicKeyLoader(),
         asyncRunner,
-        services.getMetricsSystem());
+        services.getMetricsSystem(),
+        config.getValidatorRestApiConfig().isRestApiEnabled()
+            ? Optional.of(services.getDataDirLayout())
+            : Optional.empty());
   }
 
   private void initializeValidators(
@@ -215,6 +219,16 @@ public class ValidatorClientService extends Service {
           new SyncCommitteeScheduler(
               metricsSystem, spec, syncCommitteeDutyLoader, new Random()::nextInt));
     }
+
+    if (spec.isMilestoneSupported(SpecMilestone.MERGE)) {
+      validatorTimingChannels.add(
+          new BeaconProposerPreparer(
+              validatorApiChannel,
+              validatorIndexProvider,
+              config.getValidatorConfig().getFeeRecipient().map(Eth1Address::toBytes20),
+              validators,
+              spec));
+    }
     addValidatorCountMetric(metricsSystem, validators);
     this.validatorStatusLogger =
         new DefaultValidatorStatusLogger(
@@ -223,6 +237,14 @@ public class ValidatorClientService extends Service {
 
   public static Path getSlashingProtectionPath(final DataDirLayout dataDirLayout) {
     return dataDirLayout.getValidatorDataDirectory().resolve("slashprotection");
+  }
+
+  public static Path getAlterableKeystorePath(final DataDirLayout dataDirLayout) {
+    return dataDirLayout.getValidatorDataDirectory().resolve("alterable-keystores");
+  }
+
+  public static Path getAlterableKeystorePasswordPath(final DataDirLayout dataDirLayout) {
+    return dataDirLayout.getValidatorDataDirectory().resolve("alterable-passwords");
   }
 
   private static void addValidatorCountMetric(

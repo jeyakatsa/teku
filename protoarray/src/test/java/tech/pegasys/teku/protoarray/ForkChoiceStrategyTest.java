@@ -78,8 +78,9 @@ public class ForkChoiceStrategyTest extends AbstractBlockMetadataStoreTest {
                     blockAndState.getParentRoot(),
                     blockAndState.getStateRoot(),
                     blockAndState.getState().getCurrent_justified_checkpoint().getEpoch(),
-                    blockAndState.getState().getFinalized_checkpoint().getEpoch()));
-    return ForkChoiceStrategy.initialize(protoArray);
+                    blockAndState.getState().getFinalized_checkpoint().getEpoch(),
+                    spec.isBlockProcessorOptimistic(blockAndState.getSlot())));
+    return ForkChoiceStrategy.initialize(spec, protoArray);
   }
 
   @Test
@@ -88,7 +89,7 @@ public class ForkChoiceStrategyTest extends AbstractBlockMetadataStoreTest {
     final int chainSize = 2_000;
     saveChainToStore(chainSize, store);
     final SafeFuture<ForkChoiceStrategy> future =
-        ForkChoiceStrategy.initializeAndMigrateStorage(store, storageChannel);
+        ForkChoiceStrategy.initializeAndMigrateStorage(spec, store, storageChannel);
 
     assertThat(future).isCompleted();
     final ForkChoiceStrategy forkChoiceStrategy = future.join();
@@ -101,7 +102,7 @@ public class ForkChoiceStrategyTest extends AbstractBlockMetadataStoreTest {
     final int chainSize = 5;
     saveChainToStore(chainSize, store);
     final SafeFuture<ForkChoiceStrategy> future =
-        ForkChoiceStrategy.initializeAndMigrateStorage(store, storageChannel);
+        ForkChoiceStrategy.initializeAndMigrateStorage(spec, store, storageChannel);
 
     assertThat(future).isCompleted();
 
@@ -129,7 +130,7 @@ public class ForkChoiceStrategyTest extends AbstractBlockMetadataStoreTest {
     TestStoreImpl store = new TestStoreFactory().createAnchorStore(anchor);
 
     final SafeFuture<ForkChoiceStrategy> future =
-        ForkChoiceStrategy.initializeAndMigrateStorage(store, storageChannel);
+        ForkChoiceStrategy.initializeAndMigrateStorage(spec, store, storageChannel);
     assertThat(future).isCompleted();
     final ForkChoiceStrategy forkChoiceStrategy = future.join();
 
@@ -352,7 +353,9 @@ public class ForkChoiceStrategyTest extends AbstractBlockMetadataStoreTest {
   private ForkChoiceStrategy createProtoArray(final StorageSystem storageSystem) {
     final SafeFuture<ForkChoiceStrategy> future =
         ForkChoiceStrategy.initializeAndMigrateStorage(
-            storageSystem.recentChainData().getStore(), storageSystem.createProtoArrayStorage());
+            spec,
+            storageSystem.recentChainData().getStore(),
+            storageSystem.createProtoArrayStorage());
     assertThat(future).isCompleted();
     return future.join();
   }

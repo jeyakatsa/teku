@@ -13,12 +13,14 @@
 
 package tech.pegasys.teku.config;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import tech.pegasys.teku.beaconrestapi.BeaconRestApiConfig;
 import tech.pegasys.teku.infrastructure.logging.LoggingConfig;
 import tech.pegasys.teku.infrastructure.logging.LoggingConfig.LoggingConfigBuilder;
 import tech.pegasys.teku.infrastructure.metrics.MetricsConfig;
 import tech.pegasys.teku.infrastructure.metrics.MetricsConfig.MetricsConfigBuilder;
+import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.networking.eth2.P2PConfig;
 import tech.pegasys.teku.networking.nat.NatConfiguration;
 import tech.pegasys.teku.networking.p2p.discovery.DiscoveryConfig;
@@ -31,6 +33,7 @@ import tech.pegasys.teku.services.chainstorage.StorageConfiguration;
 import tech.pegasys.teku.services.executionengine.ExecutionEngineConfiguration;
 import tech.pegasys.teku.services.powchain.PowchainConfiguration;
 import tech.pegasys.teku.spec.Spec;
+import tech.pegasys.teku.spec.datastructures.eth1.Eth1Address;
 import tech.pegasys.teku.storage.store.StoreConfig;
 import tech.pegasys.teku.sync.SyncConfig;
 import tech.pegasys.teku.validator.api.InteropConfig;
@@ -90,8 +93,6 @@ public class TekuConfiguration {
             syncConfig,
             beaconRestApiConfig,
             powchainConfiguration,
-            executionEngineConfiguration,
-            loggingConfig,
             storeConfig,
             spec);
     this.validatorClientConfig =
@@ -210,17 +211,37 @@ public class TekuConfiguration {
       powchainConfigBuilder.specProvider(spec);
       executionEngineConfigBuilder.specProvider(spec);
 
+      Eth1Address depositContractAddress = eth2NetworkConfiguration.getEth1DepositContractAddress();
+      Optional<UInt64> depositContractDeployBlock =
+          eth2NetworkConfiguration.getEth1DepositContractDeployBlock();
+      storageConfigurationBuilder.eth1DepositContractDefault(depositContractAddress);
+      powchainConfigBuilder.depositContractDefault(depositContractAddress);
+      powchainConfigBuilder.depositContractDeployBlockDefault(depositContractDeployBlock);
+      p2pConfigBuilder.discovery(
+          b -> b.bootnodesDefault(eth2NetworkConfiguration.getDiscoveryBootnodes()));
+      restApiBuilder.eth1DepositContractAddressDefault(depositContractAddress);
+
+      DataConfig dataConfig = dataConfigBuilder.build();
+      loggingConfigBuilder.dataDirectory(dataConfig.getDataBasePath().toString());
+
+      ValidatorConfig validatorConfig = validatorConfigBuilder.build();
+      // We don't need to update head for empty slots when using dependent roots
+      storeConfigBuilder.updateHeadForEmptySlotsDefault(!validatorConfig.useDependentRoots());
+
+      P2PConfig p2PConfig = p2pConfigBuilder.build();
+      syncConfig.isSyncEnabledDefault(p2PConfig.getNetworkConfig().isEnabled());
+
       return new TekuConfiguration(
           eth2NetworkConfiguration,
           spec,
           storageConfigurationBuilder.build(),
           weakSubjectivityBuilder.build(),
-          validatorConfigBuilder.build(),
+          validatorConfig,
           powchainConfigBuilder.build(),
           executionEngineConfigBuilder.build(),
           interopConfigBuilder.build(),
-          dataConfigBuilder.build(),
-          p2pConfigBuilder.build(),
+          dataConfig,
+          p2PConfig,
           syncConfig.build(),
           restApiBuilder.build(),
           loggingConfigBuilder.build(),

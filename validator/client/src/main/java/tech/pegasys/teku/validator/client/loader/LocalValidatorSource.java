@@ -14,7 +14,6 @@
 package tech.pegasys.teku.validator.client.loader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -41,32 +40,35 @@ import tech.pegasys.teku.core.signatures.Signer;
 import tech.pegasys.teku.infrastructure.async.AsyncRunner;
 import tech.pegasys.teku.infrastructure.exceptions.InvalidConfigurationException;
 import tech.pegasys.teku.spec.Spec;
-import tech.pegasys.teku.validator.api.ValidatorConfig;
+import tech.pegasys.teku.validator.api.KeyStoreFilesLocator;
 
 public class LocalValidatorSource implements ValidatorSource {
 
   private final Spec spec;
-  private final ValidatorConfig config;
+  private final boolean validatorKeystoreLockingEnabled;
   private final KeystoreLocker keystoreLocker;
   private final AsyncRunner asyncRunner;
+  private final KeyStoreFilesLocator keyStoreFilesLocator;
+  private final boolean readOnly;
 
   public LocalValidatorSource(
       final Spec spec,
-      final ValidatorConfig config,
+      final boolean validatorKeystoreLockingEnabled,
       final KeystoreLocker keystoreLocker,
-      final AsyncRunner asyncRunner) {
+      final KeyStoreFilesLocator keyStoreFilesLocator,
+      final AsyncRunner asyncRunner,
+      final boolean readOnly) {
     this.spec = spec;
-    this.config = config;
+    this.validatorKeystoreLockingEnabled = validatorKeystoreLockingEnabled;
     this.keystoreLocker = keystoreLocker;
     this.asyncRunner = asyncRunner;
+    this.keyStoreFilesLocator = keyStoreFilesLocator;
+    this.readOnly = readOnly;
   }
 
   @Override
   public List<ValidatorProvider> getAvailableValidators() {
-    final List<Pair<Path, Path>> filePairs = config.getValidatorKeystorePasswordFilePairs();
-    if (filePairs == null) {
-      return emptyList();
-    }
+    final List<Pair<Path, Path>> filePairs = keyStoreFilesLocator.parse();
     return filePairs.stream().map(this::createValidatorProvider).collect(toList());
   }
 
@@ -79,7 +81,8 @@ public class LocalValidatorSource implements ValidatorSource {
       final BLSPublicKey publicKey =
           BLSPublicKey.fromBytesCompressedValidate(Bytes48.wrap(keyStoreData.getPubkey()));
       final String password = loadPassword(passwordPath);
-      return new LocalValidatorProvider(spec, keyStoreData, keystorePath, publicKey, password);
+      return new LocalValidatorProvider(
+          spec, keyStoreData, keystorePath, publicKey, password, readOnly);
     } catch (final KeyStoreValidationException e) {
       if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
         throw new InvalidConfigurationException(e.getMessage(), e);
@@ -116,23 +119,31 @@ public class LocalValidatorSource implements ValidatorSource {
     private final Path keystoreFile;
     private final BLSPublicKey publicKey;
     private final String password;
+    private final boolean readOnly;
 
     private LocalValidatorProvider(
         final Spec spec,
         final KeyStoreData keyStoreData,
         final Path keystoreFile,
         final BLSPublicKey publicKey,
-        final String password) {
+        final String password,
+        final boolean readOnly) {
       this.spec = spec;
       this.keyStoreData = keyStoreData;
       this.keystoreFile = keystoreFile;
       this.publicKey = publicKey;
       this.password = password;
+      this.readOnly = readOnly;
     }
 
     @Override
     public BLSPublicKey getPublicKey() {
       return publicKey;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+      return readOnly;
     }
 
     @Override
@@ -149,7 +160,7 @@ public class LocalValidatorSource implements ValidatorSource {
 
     private Bytes32 loadBLSPrivateKey() {
       try {
-        if (config.isValidatorKeystoreLockingEnabled()) {
+        if (validatorKeystoreLockingEnabled) {
           keystoreLocker.lockKeystore(keystoreFile);
         }
         return Bytes32.wrap(KeyStore.decrypt(password, keyStoreData));
