@@ -21,6 +21,7 @@ public class SyncCommittee {
 	//the below function is used by the lightClientSnapshot
   private PublicKey pubKey;
 
+
   public PublicKey getPubkey() {
     return pubKey;
   }

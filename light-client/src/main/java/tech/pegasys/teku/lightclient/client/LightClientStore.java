@@ -17,9 +17,7 @@ public class LightClientStore {
 	
 	
 	private LightClientSnapshot snapshot;
-//	private Map<SyncPeriod, LightClientUpdate> bestUpdates;
-	//ssz and spec packages to be researched in order for the above method
-	//to be implemented correctly.
+//	Light-Client-Update to go here...
 
 	public LightClientSnapshot getSnapshot() {
 		return snapshot;
