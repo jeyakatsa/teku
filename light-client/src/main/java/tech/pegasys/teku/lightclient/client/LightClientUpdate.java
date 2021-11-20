@@ -1,7 +1,8 @@
 package tech.pegasys.teku.lightclient.client;
 
 import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlockHeader;
-import tech.pegasys.teku.ssz.collections.SszByteVector;
+import tech.pegasys.teku.ssz.SszVector;
+import tech.pegasys.teku.ssz.primitive.SszBytes32;
 
 public class LightClientUpdate {
 	
@@ -23,7 +24,13 @@ public class LightClientUpdate {
 	public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
 	    this.nextSyncCommittee = nextSyncCommittee;
 	}
-//	  nextSyncCommitteeBranch: Vector<Bytes32>;
+	private SszVector<SszBytes32> nextSyncCommitteeBranch;
+	public SszVector<SszBytes32> getNextSyncCommitteeBranch() {
+		return nextSyncCommitteeBranch;
+	}
+	public void setNextSyncCommitteeBranch(SszVector<SszBytes32> nextSyncCommitteeBranch) {
+		this.nextSyncCommitteeBranch = nextSyncCommitteeBranch;
+	}	
 	  
 	  
 	/** Finality proof for the update header */
@@ -34,8 +41,14 @@ public class LightClientUpdate {
 	public void setFinalityHeader(BeaconBlockHeader finalityHeader) {
 			this.finalityHeader = finalityHeader;
 	}	
-	private SszByteVector sample;
-//	  finalityBranch: Vector<Bytes32>;
+	private SszVector<SszBytes32> finalityBranch;
+	public SszVector<SszBytes32> getFinalityBranch() {
+		return finalityBranch;
+	}
+	public void setFinalityBranch(SszVector<SszBytes32> finalityBranch) {
+		this.finalityBranch = finalityBranch;
+	}
+
 		
 		
 	  /** Sync committee aggregate signature */
