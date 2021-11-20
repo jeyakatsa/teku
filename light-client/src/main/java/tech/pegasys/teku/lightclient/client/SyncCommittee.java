@@ -14,22 +14,28 @@
 package tech.pegasys.teku.lightclient.client;
 
 import tech.pegasys.teku.bls.impl.PublicKey;
+import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
+import tech.pegasys.teku.ssz.SszVector;
 
 public class SyncCommittee {
 
-	//PubKey below is immutable 
-	//the below function is used by the lightClientSnapshot
+	//PubKey functions below are immutable 
+	//the below functions are used by the lightClientSnapshot class
+	
   private PublicKey pubKey;
-
-
   public PublicKey getPubkey() {
     return pubKey;
   }
-
   public void setPubkey(PublicKey pubKey) {
     this.pubKey = pubKey;
   }
-  
-  //PublicKeys function to be added after light client fully completed.
+
+  private SszVector<SszPublicKey> pubKeys;
+  public SszVector<SszPublicKey> getPubKeys() {
+	return pubKeys;
+  }
+  public void setPubKeys(SszVector<SszPublicKey> pubKeys) {
+		this.pubKeys = pubKeys;
+  }
   
 }
