@@ -1,7 +1,10 @@
 package tech.pegasys.teku.lightclient.client;
 
+import tech.pegasys.teku.bls.impl.blst.BlstSignature;
+import tech.pegasys.teku.spec.SpecVersion;
 import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlockHeader;
 import tech.pegasys.teku.ssz.SszVector;
+import tech.pegasys.teku.ssz.collections.SszBitvector;
 import tech.pegasys.teku.ssz.primitive.SszBytes32;
 
 public class LightClientUpdate {
@@ -49,14 +52,30 @@ public class LightClientUpdate {
 		this.finalityBranch = finalityBranch;
 	}
 
-		
-		
-	  /** Sync committee aggregate signature */
-//	  syncCommitteeBits: BitVector;
-//	  syncCommitteeSignature: BLSSignature;
-		
-		
-	  /** Fork version for the aggregate signature */
-//	  forkVersion: Version;
+
+	/** Sync committee aggregate signature */
+	private SszBitvector syncCommitteeBits;
+	public SszBitvector getSyncCommitteeBits() {
+		return syncCommitteeBits;
+	}
+	public void setSyncCommitteeBits(SszBitvector syncCommitteeBits) {
+		this.syncCommitteeBits = syncCommitteeBits;
+	}
+	private BlstSignature syncCommitteeSignature;
+	public BlstSignature getSyncCommitteeSignature() {
+		return syncCommitteeSignature;
+	}
+	public void setSyncCommitteeSignature(BlstSignature syncCommitteeSignature) {
+		this.syncCommitteeSignature = syncCommitteeSignature;
+	}
+
+	/** Fork version for the aggregate signature */
+	private SpecVersion forkVersion;
+	public SpecVersion getForkVersion() {
+		return forkVersion;
+	}
+	public void setForkVersion(SpecVersion forkVersion) {
+		this.forkVersion = forkVersion;
+	}
 
 }
