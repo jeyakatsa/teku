@@ -69,6 +69,7 @@ public class LightClientUpdate {
 		this.syncCommitteeSignature = syncCommitteeSignature;
 	}
 
+	
 	/** Fork version for the aggregate signature */
 	private SpecVersion forkVersion;
 	public SpecVersion getForkVersion() {
