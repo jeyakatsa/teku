@@ -13,6 +13,7 @@
 
 package tech.pegasys.teku.spec.datastructures.execution;
 
+import com.google.common.base.MoreObjects;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 
@@ -21,14 +22,11 @@ public class PowBlock {
   private final Bytes32 blockHash;
   private final Bytes32 parentHash;
   private final UInt256 totalDifficulty;
-  private final UInt256 difficulty;
 
-  public PowBlock(
-      Bytes32 blockHash, Bytes32 parentHash, UInt256 totalDifficulty, UInt256 difficulty) {
+  public PowBlock(Bytes32 blockHash, Bytes32 parentHash, UInt256 totalDifficulty) {
     this.blockHash = blockHash;
     this.parentHash = parentHash;
     this.totalDifficulty = totalDifficulty;
-    this.difficulty = difficulty;
   }
 
   public Bytes32 getBlockHash() {
@@ -43,7 +41,12 @@ public class PowBlock {
     return totalDifficulty;
   }
 
-  public UInt256 getDifficulty() {
-    return difficulty;
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("blockHash", blockHash)
+        .add("parentHash", parentHash)
+        .add("totalDifficulty", totalDifficulty)
+        .toString();
   }
 }

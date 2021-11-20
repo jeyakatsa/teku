@@ -22,7 +22,6 @@ public enum ValidatorApiMethod {
   GET_GENESIS("eth/v1/beacon/genesis"),
   GET_VALIDATORS("eth/v1/beacon/states/head/validators"),
   GET_DUTIES("validator/duties"),
-  GET_UNSIGNED_BLOCK("eth/v1/validator/blocks/:slot"),
   GET_UNSIGNED_BLOCK_V2("eth/v2/validator/blocks/:slot"),
   SEND_SIGNED_BLOCK("eth/v1/beacon/blocks"),
   GET_ATTESTATION_DATA("eth/v1/validator/attestation_data"),
@@ -39,6 +38,7 @@ public enum ValidatorApiMethod {
   GET_SYNC_COMMITTEE_DUTIES("eth/v1/validator/duties/sync/:epoch"),
   GET_SYNC_COMMITTEE_CONTRIBUTION("eth/v1/validator/sync_committee_contribution"),
   GET_PROPOSER_DUTIES("eth/v1/validator/duties/proposer/:epoch"),
+  PREPARE_BEACON_PROPOSER("/eth/v1/validator/prepare_beacon_proposer"),
   GET_BLOCK_HEADER("eth/v1/beacon/headers/:block_id"),
   GET_CONFIG_SPEC("/eth/v1/config/spec"),
   EVENTS("eth/v1/events");

@@ -15,21 +15,27 @@ package tech.pegasys.teku.validator.client.restapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static tech.pegasys.teku.core.signatures.NoOpSigner.NO_OP_SIGNER;
 import static tech.pegasys.teku.infrastructure.restapi.json.JsonUtil.parse;
 import static tech.pegasys.teku.infrastructure.restapi.json.JsonUtil.serialize;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tech.pegasys.teku.bls.BLSPublicKey;
 import tech.pegasys.teku.infrastructure.restapi.JsonTestUtil;
 import tech.pegasys.teku.infrastructure.restapi.json.JsonUtil;
 import tech.pegasys.teku.infrastructure.restapi.types.DeserializableTypeDefinition;
-import tech.pegasys.teku.infrastructure.restapi.types.SerializableTypeDefinition;
 import tech.pegasys.teku.spec.TestSpecFactory;
 import tech.pegasys.teku.spec.util.DataStructureUtil;
+import tech.pegasys.teku.validator.client.Validator;
+import tech.pegasys.teku.validator.client.restapi.apis.schema.DeleteKeyResult;
 import tech.pegasys.teku.validator.client.restapi.apis.schema.DeleteKeysRequest;
+import tech.pegasys.teku.validator.client.restapi.apis.schema.DeleteKeysResponse;
+import tech.pegasys.teku.validator.client.restapi.apis.schema.PostKeyResult;
+import tech.pegasys.teku.validator.client.restapi.apis.schema.PostKeysRequest;
 
 class ValidatorTypesTest {
   private final DataStructureUtil dataStructureUtil =
@@ -37,45 +43,60 @@ class ValidatorTypesTest {
 
   @Test
   void listKeysResponse_shouldFormatListOfPublicKeys() throws Exception {
-    final List<BLSPublicKey> keys =
+    final List<Validator> keys =
         List.of(
-            dataStructureUtil.randomPublicKey(),
-            dataStructureUtil.randomPublicKey(),
-            dataStructureUtil.randomPublicKey(),
-            dataStructureUtil.randomPublicKey());
+            new Validator(dataStructureUtil.randomPublicKey(), NO_OP_SIGNER, Optional::empty, true),
+            new Validator(
+                dataStructureUtil.randomPublicKey(), NO_OP_SIGNER, Optional::empty, false));
 
     final Map<String, Object> result =
         JsonTestUtil.parse(JsonUtil.serialize(keys, ValidatorTypes.LIST_KEYS_RESPONSE_TYPE));
 
-    assertThat(result).containsOnlyKeys("keys");
-    final List<Map<String, Object>> keysList = JsonTestUtil.getList(result, "keys");
+    assertThat(result).containsOnlyKeys("data");
+    final List<Map<String, Object>> keysList = JsonTestUtil.getList(result, "data");
     assertThat(keysList).hasSize(keys.size());
     for (int i = 0; i < keys.size(); i++) {
       assertThat(keysList.get(i))
           .containsOnly(
-              entry("validating_pubkey", keys.get(i).toBytesCompressed().toHexString()),
-              entry("derivation_path", null));
+              entry(
+                  "validating_pubkey",
+                  keys.get(i).getPublicKey().toBytesCompressed().toHexString()),
+              entry("readonly", keys.get(i).isReadOnly()));
     }
   }
 
   @Test
-  void listKeysResponse_shouldSerializeOpenApi() throws Exception {
-    assertOpenApi(ValidatorTypes.LIST_KEYS_RESPONSE_TYPE, "ListKeysResponse.json");
+  void postKeysRequest_shouldFormatPostKeysRequest() throws Exception {
+    final PostKeysRequest request =
+        new PostKeysRequest(List.of("key"), List.of("pass"), "slashingprotection");
+    final Map<String, Object> result =
+        JsonTestUtil.parse(JsonUtil.serialize(request, ValidatorTypes.POST_KEYS_REQUEST));
+    assertThat(result)
+        .containsOnly(
+            entry("keystores", List.of("key")),
+            entry("passwords", List.of("pass")),
+            entry("slashing_protection", "slashingprotection"));
   }
 
   @Test
-  void pubkey_shouldSerializeOpenApi() throws Exception {
-    assertOpenApi(ValidatorTypes.PUBKEY_TYPE, "PubKey.json");
-  }
-
-  @Test
-  void deleteKeysResponse_shouldSerializeOpenApi() throws Exception {
-    assertOpenApi(ValidatorTypes.DELETE_KEYS_RESPONSE_TYPE, "DeleteKeysResponse.json");
-  }
-
-  @Test
-  void deleteKeyResult_shouldSerializeOpenApi() throws Exception {
-    assertOpenApi(ValidatorTypes.DELETE_KEY_RESULT, "DeleteKeyResult.json");
+  void postKeysResponse_shouldFormatPostKeysResponse() throws Exception {
+    final List<PostKeyResult> original =
+        List.of(PostKeyResult.success(), PostKeyResult.error("message"), PostKeyResult.duplicate());
+    final Map<String, Object> result =
+        JsonTestUtil.parse(JsonUtil.serialize(original, ValidatorTypes.POST_KEYS_RESPONSE));
+    assertThat(result.keySet()).containsOnly("data");
+    final List<Map<String, Object>> keysList = JsonTestUtil.getList(result, "data");
+    for (int i = 0; i < original.size(); i++) {
+      if (original.get(i).getMessage().isPresent()) {
+        assertThat(keysList.get(i))
+            .containsOnly(
+                entry("status", original.get(i).getImportStatus().toString()),
+                entry("message", original.get(i).getMessage().orElseThrow()));
+      } else {
+        assertThat(keysList.get(i))
+            .containsOnly(entry("status", original.get(i).getImportStatus().toString()));
+      }
+    }
   }
 
   @Test
@@ -88,25 +109,37 @@ class ValidatorTypesTest {
   }
 
   @Test
-  void deleteKeysRequest_shouldDeserializeEmptyList() throws Exception {
-    assertRoundTrip(new DeleteKeysRequest(), ValidatorTypes.DELETE_KEYS_REQUEST);
+  void deleteKeysResponse_shouldSerialize() throws Exception {
+    final String slashString = "\"{}\"";
+    final List<DeleteKeyResult> original =
+        List.of(
+            DeleteKeyResult.success(),
+            DeleteKeyResult.error("ERR"),
+            DeleteKeyResult.notActive(),
+            DeleteKeyResult.notFound());
+    final Map<String, Object> result =
+        JsonTestUtil.parse(
+            JsonUtil.serialize(
+                new DeleteKeysResponse(original, slashString),
+                ValidatorTypes.DELETE_KEYS_RESPONSE_TYPE));
+    final List<Map<String, Object>> keysList = JsonTestUtil.getList(result, "data");
+    for (int i = 0; i < original.size(); i++) {
+      if (original.get(i).getMessage().isPresent()) {
+        assertThat(keysList.get(i))
+            .containsOnly(
+                entry("status", original.get(i).getStatus().toString()),
+                entry("message", original.get(i).getMessage().orElseThrow()));
+      } else {
+        assertThat(keysList.get(i))
+            .containsOnly(entry("status", original.get(i).getStatus().toString()));
+      }
+    }
+    assertThat(result.get("slashing_protection")).isEqualTo(slashString);
   }
 
   @Test
-  void deleteKeysRequest_shouldSerializeOpenApi() throws Exception {
-    assertOpenApi(ValidatorTypes.DELETE_KEYS_REQUEST, "DeleteKeysRequest.json");
-  }
-
-  private void assertOpenApi(final SerializableTypeDefinition<?> type, final String resourceName)
-      throws Exception {
-    final Map<String, Object> expectedParsed = parseJsonResource(resourceName);
-    final String json = JsonUtil.serialize(type::serializeOpenApiType);
-    final Map<String, Object> result = JsonTestUtil.parse(json);
-    assertThat(result).isEqualTo(expectedParsed);
-  }
-
-  private Map<String, Object> parseJsonResource(final String resourceName) throws Exception {
-    return JsonTestUtil.parseJsonResource(ValidatorTypesTest.class, resourceName);
+  void deleteKeysRequest_shouldDeserializeEmptyList() throws Exception {
+    assertRoundTrip(new DeleteKeysRequest(), ValidatorTypes.DELETE_KEYS_REQUEST);
   }
 
   private <T> void assertRoundTrip(final T value, final DeserializableTypeDefinition<T> type)

@@ -15,31 +15,19 @@ package tech.pegasys.teku.cli.options;
 
 import static tech.pegasys.teku.config.TekuConfiguration.Builder;
 
-import java.util.ArrayList;
-import java.util.List;
 import picocli.CommandLine.Option;
 
 public class ExecutionEngineOptions {
 
   @Option(
-      names = {"--Xee-endpoints", "--Xee-endpoint"},
+      names = {"--Xee-endpoint"},
       paramLabel = "<NETWORK>",
-      description = "URLs for Execution Engine nodes.",
-      split = ",",
-      arity = "0..*",
+      description = "URL for Execution Engine node.",
+      arity = "1",
       hidden = true)
-  private List<String> eeEndpoints = new ArrayList<>();
-
-  @Option(
-      names = {"--Xee-fee-recipient-address"},
-      paramLabel = "<ADDRESS>",
-      description =
-          "Suggested fee recipient sent to the execution engine, which could use it as coinbase when producing a new execution block.",
-      arity = "0..1",
-      hidden = true)
-  private String feeRecipient = null;
+  private String executionEngineEndpoint = null;
 
   public void configure(final Builder builder) {
-    builder.executionEngine(b -> b.endpoints(eeEndpoints).feeRecipient(feeRecipient));
+    builder.executionEngine(b -> b.endpoint(executionEngineEndpoint));
   }
 }

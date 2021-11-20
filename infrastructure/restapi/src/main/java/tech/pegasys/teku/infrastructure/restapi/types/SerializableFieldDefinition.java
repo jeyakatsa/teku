@@ -23,4 +23,10 @@ public interface SerializableFieldDefinition<TObject> {
   void writeOpenApiField(JsonGenerator gen) throws IOException;
 
   Collection<OpenApiTypeDefinition> getReferencedTypeDefinitions();
+
+  String getName();
+
+  default boolean isRequired() {
+    return false;
+  }
 }

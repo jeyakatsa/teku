@@ -13,8 +13,10 @@
 
 package tech.pegasys.teku.validator.client.restapi.apis.schema;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.util.List;
+import java.util.Objects;
 
 public class DeleteKeysResponse {
   private final List<DeleteKeyResult> data;
@@ -32,5 +34,27 @@ public class DeleteKeysResponse {
 
   public String getSlashingProtection() {
     return slashingProtection;
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    final DeleteKeysResponse that = (DeleteKeysResponse) o;
+    return Objects.equals(data, that.data)
+        && Objects.equals(slashingProtection, that.slashingProtection);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(data, slashingProtection);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("data", data)
+        .add("slashingProtection", slashingProtection)
+        .toString();
   }
 }
