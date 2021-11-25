@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.bls.BLSKeyPair;
 import tech.pegasys.teku.bls.BLSPublicKey;
@@ -44,6 +45,7 @@ import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlock;
 import tech.pegasys.teku.spec.datastructures.blocks.Eth1Data;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBlockAndState;
+import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadHeader;
 import tech.pegasys.teku.spec.datastructures.interop.MockStartBeaconStateGenerator;
 import tech.pegasys.teku.spec.datastructures.interop.MockStartDepositGenerator;
 import tech.pegasys.teku.spec.datastructures.interop.MockStartValidatorKeyPairFactory;
@@ -232,11 +234,17 @@ public class ChainBuilder {
 
   public SignedBlockAndState generateGenesis(final UInt64 genesisTime, final boolean signDeposits) {
     return generateGenesis(
-        genesisTime, signDeposits, spec.getGenesisSpecConfig().getMaxEffectiveBalance());
+        genesisTime,
+        signDeposits,
+        spec.getGenesisSpecConfig().getMaxEffectiveBalance(),
+        Optional.empty());
   }
 
   public SignedBlockAndState generateGenesis(
-      final UInt64 genesisTime, final boolean signDeposits, final UInt64 depositAmount) {
+      final UInt64 genesisTime,
+      final boolean signDeposits,
+      final UInt64 depositAmount,
+      final Optional<ExecutionPayloadHeader> payloadHeader) {
     checkState(blocks.isEmpty(), "Genesis already created");
 
     // Generate genesis state
@@ -245,7 +253,7 @@ public class ChainBuilder {
             .createDeposits(validatorKeys, depositAmount);
     BeaconState genesisState =
         new MockStartBeaconStateGenerator(spec)
-            .createInitialBeaconState(genesisTime, initialDepositData);
+            .createInitialBeaconState(genesisTime, initialDepositData, payloadHeader);
 
     // Generate genesis block
     BeaconBlock genesisBlock = BeaconBlock.fromGenesisState(spec, genesisState);
@@ -400,7 +408,8 @@ public class ChainBuilder {
               Optional.of(attestations),
               Optional.empty(),
               Optional.empty(),
-              options.getEth1Data());
+              options.getEth1Data(),
+              options.getTransactions());
       trackBlock(nextBlockAndState);
       return nextBlockAndState;
     } catch (StateTransitionException | EpochProcessingException | SlotProcessingException e) {
@@ -509,6 +518,7 @@ public class ChainBuilder {
 
     private final List<Attestation> attestations = new ArrayList<>();
     private Optional<Eth1Data> eth1Data = Optional.empty();
+    private Optional<List<Bytes>> transactions = Optional.empty();
 
     private BlockOptions() {}
 
@@ -526,12 +536,21 @@ public class ChainBuilder {
       return this;
     }
 
+    public BlockOptions setTransactions(final Bytes... transactions) {
+      this.transactions = Optional.of(List.of(transactions));
+      return this;
+    }
+
     private List<Attestation> getAttestations() {
       return attestations;
     }
 
     public Optional<Eth1Data> getEth1Data() {
       return eth1Data;
+    }
+
+    public Optional<List<Bytes>> getTransactions() {
+      return transactions;
     }
   }
 }
