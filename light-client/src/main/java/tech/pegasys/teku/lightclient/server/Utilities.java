@@ -1,8 +1,6 @@
 package tech.pegasys.teku.lightclient.server;
 
-import java.lang.reflect.Array;
 
-import tech.pegasys.teku.ssz.cache.ArrayIntCache;
 
 public class Utilities {
 	
@@ -14,7 +12,8 @@ public class Utilities {
 //		this.bits = bits;
 //	}
 	
-	public int sumBits(ArrayIntCache<Boolean> bits) {
+	
+	public int sumBits(ArrayLike<Boolean> bits) {
 		int sum = 0;
 		for (boolean bit: bits) {
 			if (bit) {
