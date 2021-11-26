@@ -1,5 +1,6 @@
-package tech.pegasys.teku.lightclient.server;;
+package tech.pegasys.teku.lightclient.utilities;;
 
+//Generic Array
 public class ArrayLike<T>
 {
     private final Object[] arr;
