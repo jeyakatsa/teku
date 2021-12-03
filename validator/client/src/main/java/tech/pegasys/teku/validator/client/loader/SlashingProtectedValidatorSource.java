@@ -16,6 +16,7 @@ package tech.pegasys.teku.validator.client.loader;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
+import tech.pegasys.signers.bls.keystore.model.KeyStoreData;
 import tech.pegasys.teku.bls.BLSPublicKey;
 import tech.pegasys.teku.core.signatures.Signer;
 import tech.pegasys.teku.core.signatures.SlashingProtectedSigner;
@@ -36,6 +37,17 @@ public class SlashingProtectedValidatorSource implements ValidatorSource {
     return delegate.getAvailableValidators().stream()
         .map(SlashingProtectedValidatorProvider::new)
         .collect(toList());
+  }
+
+  @Override
+  public boolean canAddValidator() {
+    return delegate.canAddValidator();
+  }
+
+  @Override
+  public MutableValidatorAddResult addValidator(
+      final KeyStoreData keyStoreData, final String password) {
+    return delegate.addValidator(keyStoreData, password);
   }
 
   private class SlashingProtectedValidatorProvider implements ValidatorProvider {
