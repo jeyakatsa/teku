@@ -1,7 +1,7 @@
 package tech.pegasys.teku.lightclient.server;
 
 public class LightClientUpdater {
-	
-	//Code to be added
+
+    // Code to be added
 
 }
