@@ -1,7 +1,5 @@
 package tech.pegasys.teku.lightclient.client;
 
-package tech.pegasys.teku.lightclient.client;
-
 public class LightClientStore {
 
     private LightClientSnapshot snapshot;
