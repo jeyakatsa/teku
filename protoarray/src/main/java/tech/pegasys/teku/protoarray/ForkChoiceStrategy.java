@@ -34,7 +34,6 @@ import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.datastructures.blocks.BlockAndCheckpointEpochs;
 import tech.pegasys.teku.spec.datastructures.blocks.SlotAndBlockRoot;
-import tech.pegasys.teku.spec.datastructures.forkchoice.ProposerWeighting;
 import tech.pegasys.teku.spec.datastructures.forkchoice.ReadOnlyForkChoiceStrategy;
 import tech.pegasys.teku.spec.datastructures.forkchoice.VoteTracker;
 import tech.pegasys.teku.spec.datastructures.forkchoice.VoteUpdater;
@@ -52,6 +51,8 @@ public class ForkChoiceStrategy implements BlockMetadataStore, ReadOnlyForkChoic
   private final ProtoArray protoArray;
 
   private List<UInt64> balances;
+  private Optional<Bytes32> proposerBoostRoot = Optional.empty();
+  private UInt64 proposerBoostAmount = UInt64.ZERO;
 
   private ForkChoiceStrategy(Spec spec, ProtoArray protoArray, List<UInt64> balances) {
     this.spec = spec;
@@ -89,7 +90,7 @@ public class ForkChoiceStrategy implements BlockMetadataStore, ReadOnlyForkChoic
    * head.
    *
    * @param voteUpdater the vote updater to access and update pending votes from
-   * @param removedProposerWeightings expired proposer weightings to be removed
+   * @param proposerBoostRoot the block root to apply proposer boost to
    * @param finalizedCheckpoint the current finalized checkpoint
    * @param justifiedCheckpoint the current justified checkpoint
    * @param justifiedStateEffectiveBalances the effective validator balances at the justified
@@ -98,10 +99,11 @@ public class ForkChoiceStrategy implements BlockMetadataStore, ReadOnlyForkChoic
    */
   public Bytes32 applyPendingVotes(
       final VoteUpdater voteUpdater,
-      final List<ProposerWeighting> removedProposerWeightings,
+      final Optional<Bytes32> proposerBoostRoot,
       final Checkpoint finalizedCheckpoint,
       final Checkpoint justifiedCheckpoint,
-      final List<UInt64> justifiedStateEffectiveBalances) {
+      final List<UInt64> justifiedStateEffectiveBalances,
+      final UInt64 proposerBoostAmount) {
     protoArrayLock.writeLock().lock();
     votesLock.writeLock().lock();
     balancesLock.writeLock().lock();
@@ -113,11 +115,16 @@ public class ForkChoiceStrategy implements BlockMetadataStore, ReadOnlyForkChoic
               protoArray::getIndexByRoot,
               balances,
               justifiedStateEffectiveBalances,
-              removedProposerWeightings);
+              this.proposerBoostRoot,
+              proposerBoostRoot,
+              this.proposerBoostAmount,
+              proposerBoostAmount);
 
       protoArray.applyScoreChanges(
           deltas, justifiedCheckpoint.getEpoch(), finalizedCheckpoint.getEpoch());
       balances = justifiedStateEffectiveBalances;
+      this.proposerBoostRoot = proposerBoostRoot;
+      this.proposerBoostAmount = proposerBoostAmount;
 
       return findHeadImpl(justifiedCheckpoint, finalizedCheckpoint).getBlockRoot();
     } finally {
@@ -393,15 +400,6 @@ public class ForkChoiceStrategy implements BlockMetadataStore, ReadOnlyForkChoic
                       block.getExecutionBlockHash().orElse(Bytes32.ZERO)));
       removedBlockRoots.forEach(protoArray::removeBlockRoot);
       protoArray.maybePrune(finalizedCheckpoint.getRoot());
-    } finally {
-      protoArrayLock.writeLock().unlock();
-    }
-  }
-
-  public void applyProposerWeighting(final ProposerWeighting proposerWeighting) {
-    protoArrayLock.writeLock().lock();
-    try {
-      protoArray.applyProposerWeighting(proposerWeighting);
     } finally {
       protoArrayLock.writeLock().unlock();
     }

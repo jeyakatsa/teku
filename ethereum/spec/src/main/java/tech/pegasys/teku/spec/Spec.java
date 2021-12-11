@@ -28,6 +28,8 @@ import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.bls.BLSPublicKey;
 import tech.pegasys.teku.bls.BLSSignatureVerifier;
 import tech.pegasys.teku.infrastructure.async.SafeFuture;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszBitlist;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes4;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.cache.IndexedAttestationCache;
 import tech.pegasys.teku.spec.config.SpecConfig;
@@ -65,14 +67,11 @@ import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.BlockProce
 import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.EpochProcessingException;
 import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.SlotProcessingException;
 import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.StateTransitionException;
-import tech.pegasys.teku.spec.logic.common.statetransition.results.BlockImportResult;
 import tech.pegasys.teku.spec.logic.common.util.AsyncBLSSignatureVerifier;
 import tech.pegasys.teku.spec.logic.common.util.BeaconStateUtil;
 import tech.pegasys.teku.spec.logic.common.util.SyncCommitteeUtil;
 import tech.pegasys.teku.spec.logic.versions.merge.block.OptimisticExecutionPayloadExecutor;
 import tech.pegasys.teku.spec.schemas.SchemaDefinitions;
-import tech.pegasys.teku.ssz.collections.SszBitlist;
-import tech.pegasys.teku.ssz.type.Bytes4;
 
 public class Spec {
   private final Map<SpecMilestone, SpecVersion> specVersions;
@@ -466,17 +465,6 @@ public class Spec {
         .validateVoluntaryExit(fork(epoch), state, signedExit);
   }
 
-  public BlockImportResult onBlock(
-      final MutableStore store,
-      final SignedBeaconBlock signedBlock,
-      final BeaconState blockSlotState,
-      final IndexedAttestationCache indexedAttestationCache,
-      final OptimisticExecutionPayloadExecutor payloadExecutor) {
-    return atBlock(signedBlock)
-        .getForkChoiceUtil()
-        .onBlock(store, signedBlock, blockSlotState, indexedAttestationCache, payloadExecutor);
-  }
-
   public boolean isBlockProcessorOptimistic(final UInt64 slot) {
     return atSlot(slot).getBlockProcessor().isOptimistic();
   }
@@ -574,6 +562,10 @@ public class Spec {
 
   public UInt64 getTotalActiveBalance(BeaconState state) {
     return atState(state).beaconStateAccessors().getTotalActiveBalance(state);
+  }
+
+  public UInt64 getProposerBoostAmount(BeaconState state) {
+    return atState(state).beaconStateAccessors().getProposerBoostAmount(state);
   }
 
   public int getPreviousEpochAttestationCapacity(final BeaconState state) {

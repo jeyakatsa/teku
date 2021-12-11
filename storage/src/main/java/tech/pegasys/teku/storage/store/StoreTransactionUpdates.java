@@ -87,9 +87,7 @@ class StoreTransactionUpdates {
 
     // Update finalized data
     finalizedChainData.ifPresent(
-        finalizedData -> {
-          store.finalizedAnchor = finalizedData.getLatestFinalized();
-        });
+        finalizedData -> store.finalizedAnchor = finalizedData.getLatestFinalized());
 
     // Prune blocks and states
     prunedHotBlockRoots.forEach(
@@ -99,6 +97,10 @@ class StoreTransactionUpdates {
           store.checkpointStates.removeIf(
               slotAndBlockRoot -> slotAndBlockRoot.getBlockRoot().equals(root));
         });
+
+    if (tx.proposerBoostRootSet) {
+      store.proposerBoostRoot = tx.proposerBoostRoot;
+    }
 
     store.forkChoiceStrategy.applyUpdate(
         hotBlocks.values(), prunedHotBlockRoots, store.getFinalizedCheckpoint());

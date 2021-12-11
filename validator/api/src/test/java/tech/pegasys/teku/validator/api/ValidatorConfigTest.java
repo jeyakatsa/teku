@@ -21,6 +21,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tech.pegasys.teku.bls.BLSTestUtil;
 import tech.pegasys.teku.infrastructure.exceptions.InvalidConfigurationException;
+import tech.pegasys.teku.spec.datastructures.eth1.Eth1Address;
 
 class ValidatorConfigTest {
 
@@ -116,5 +117,57 @@ class ValidatorConfigTest {
             .validatorExternalSignerTruststorePasswordFile(Path.of("somepath"));
 
     Assertions.assertThatCode(builder::build).doesNotThrowAnyException();
+  }
+
+  @Test
+  public void merge_shouldThrowExceptionIfExternalSignerPublicKeySourcesIsSpecified()
+      throws MalformedURLException {
+    final ValidatorConfig config =
+        configBuilder
+            .validatorExternalSignerPublicKeySources(
+                List.of(BLSTestUtil.randomKeyPair(0).getPublicKey().toString()))
+            .validatorExternalSignerUrl(URI.create("http://localhost:9000").toURL())
+            .build();
+
+    Assertions.assertThatExceptionOfType(InvalidConfigurationException.class)
+        .isThrownBy(config::getSuggestedFeeRecipient)
+        .withMessageContaining(
+            "Invalid configuration. --validators-fee-recipient-address must be specified when Merge milestone is active");
+  }
+
+  @Test
+  public void merge_shouldThrowExceptionIfValidatorKeysAreSpecified() throws MalformedURLException {
+    final ValidatorConfig config = configBuilder.validatorKeys(List.of("some string")).build();
+
+    Assertions.assertThatExceptionOfType(InvalidConfigurationException.class)
+        .isThrownBy(config::getSuggestedFeeRecipient)
+        .withMessageContaining(
+            "Invalid configuration. --validators-fee-recipient-address must be specified when Merge milestone is active");
+  }
+
+  @Test
+  public void merge_noExceptionThrownIfIfExternalSignerPublicKeySourcesIsSpecified()
+      throws MalformedURLException {
+    final ValidatorConfig config =
+        configBuilder
+            .validatorExternalSignerPublicKeySources(
+                List.of(BLSTestUtil.randomKeyPair(0).getPublicKey().toString()))
+            .validatorExternalSignerUrl(URI.create("http://localhost:9000").toURL())
+            .suggestedFeeRecipient("0x0000000000000000000000000000000000000000")
+            .build();
+
+    Assertions.assertThatCode(config::getSuggestedFeeRecipient).doesNotThrowAnyException();
+  }
+
+  @Test
+  public void merge_noExceptionThrownIfIfValidatorKeysAreSpecified() {
+    final ValidatorConfig config =
+        configBuilder
+            .validatorKeys(List.of("some string"))
+            .suggestedFeeRecipient(
+                Eth1Address.fromHexString("0x0000000000000000000000000000000000000000"))
+            .build();
+
+    Assertions.assertThatCode(config::getSuggestedFeeRecipient).doesNotThrowAnyException();
   }
 }

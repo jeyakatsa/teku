@@ -25,8 +25,8 @@ import java.util.function.Consumer;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes4;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
-import tech.pegasys.teku.ssz.type.Bytes4;
 
 public class SpecConfigBuilder {
   private final Map<String, Object> rawConfig = new HashMap<>();
@@ -93,6 +93,8 @@ public class SpecConfigBuilder {
 
   // Fork Choice
   private Integer safeSlotsToUpdateJustified;
+  // Added after Phase0 was live, so default to 0 which disables proposer score boosting.
+  private int proposerScoreBoost = 0;
 
   // Deposit Contract
   private Integer depositChainId;
@@ -155,6 +157,7 @@ public class SpecConfigBuilder {
             maxVoluntaryExits,
             secondsPerEth1Block,
             safeSlotsToUpdateJustified,
+            proposerScoreBoost,
             depositChainId,
             depositNetworkId,
             depositContractAddress);
@@ -520,6 +523,12 @@ public class SpecConfigBuilder {
   public SpecConfigBuilder safeSlotsToUpdateJustified(final Integer safeSlotsToUpdateJustified) {
     checkNotNull(safeSlotsToUpdateJustified);
     this.safeSlotsToUpdateJustified = safeSlotsToUpdateJustified;
+    return this;
+  }
+
+  public SpecConfigBuilder proposerScoreBoost(final Integer proposerScoreBoost) {
+    checkNotNull(proposerScoreBoost);
+    this.proposerScoreBoost = proposerScoreBoost;
     return this;
   }
 

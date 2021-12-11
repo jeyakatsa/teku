@@ -32,6 +32,8 @@ import org.junit.jupiter.api.Test;
 import tech.pegasys.teku.core.ChainBuilder;
 import tech.pegasys.teku.infrastructure.async.SafeFuture;
 import tech.pegasys.teku.infrastructure.async.eventthread.InlineEventThread;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes20;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes8;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.protoarray.ForkChoiceStrategy;
 import tech.pegasys.teku.spec.Spec;
@@ -49,8 +51,6 @@ import tech.pegasys.teku.spec.executionengine.ForkChoiceUpdatedStatus;
 import tech.pegasys.teku.spec.executionengine.PayloadAttributes;
 import tech.pegasys.teku.spec.logic.common.block.AbstractBlockProcessor;
 import tech.pegasys.teku.spec.util.DataStructureUtil;
-import tech.pegasys.teku.ssz.type.Bytes20;
-import tech.pegasys.teku.ssz.type.Bytes8;
 import tech.pegasys.teku.storage.client.RecentChainData;
 import tech.pegasys.teku.storage.storageSystem.InMemoryStorageSystemBuilder;
 import tech.pegasys.teku.storage.storageSystem.StorageSystem;
@@ -84,7 +84,12 @@ class ForkChoiceNotifierTest {
     // initialize post-merge by default
     storageSystem = InMemoryStorageSystemBuilder.buildDefault(spec);
     recentChainData = storageSystem.recentChainData();
-    notifier = new ForkChoiceNotifier(eventThread, spec, executionEngineChannel, recentChainData);
+    notifier =
+        new ForkChoiceNotifier(
+            eventThread,
+            executionEngineChannel,
+            recentChainData,
+            new PayloadAttributesCalculator(spec, eventThread, recentChainData));
     notifier.onSyncingStatusChanged(true); // Start in sync to make testing easier
     storageSystem.chainUpdater().initializeGenesisWithPayload(false);
     storageSystem.chainUpdater().updateBestBlock(storageSystem.chainUpdater().advanceChain());
@@ -104,7 +109,12 @@ class ForkChoiceNotifierTest {
   void reInitializePreMerge() {
     storageSystem = InMemoryStorageSystemBuilder.buildDefault(spec);
     recentChainData = storageSystem.recentChainData();
-    notifier = new ForkChoiceNotifier(eventThread, spec, executionEngineChannel, recentChainData);
+    notifier =
+        new ForkChoiceNotifier(
+            eventThread,
+            executionEngineChannel,
+            recentChainData,
+            new PayloadAttributesCalculator(spec, eventThread, recentChainData));
     notifier.onSyncingStatusChanged(true);
     storageSystem.chainUpdater().initializeGenesis(false);
     storageSystem.chainUpdater().updateBestBlock(storageSystem.chainUpdater().advanceChain());

@@ -13,7 +13,6 @@
 
 package tech.pegasys.teku.protoarray;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.teku.infrastructure.unsigned.UInt64.ZERO;
 import static tech.pegasys.teku.protoarray.ProtoArrayScoreCalculator.computeDeltas;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.datastructures.forkchoice.VoteTracker;
@@ -35,21 +33,17 @@ import tech.pegasys.teku.spec.datastructures.forkchoice.VoteUpdater;
 
 public class ProtoArrayScoreCalculatorTest {
 
-  private Map<Bytes32, Integer> indices;
-  private List<UInt64> oldBalances;
-  private List<UInt64> newBalances;
-  private VoteUpdater store;
+  private Map<Bytes32, Integer> indices = new HashMap<>();
+  private List<UInt64> oldBalances = new ArrayList<>();
+  private List<UInt64> newBalances = new ArrayList<>();
+  private Optional<Bytes32> oldProposerBoostRoot = Optional.empty();
+  private Optional<Bytes32> newProposerBoostRoot = Optional.empty();
+  private UInt64 oldProposerBoostAmount = ZERO;
+  private UInt64 newProposerBoostAmount = ZERO;
+  private VoteUpdater store = createStoreToManipulateVotes();
 
   private Optional<Integer> getIndex(final Bytes32 root) {
     return Optional.ofNullable(indices.get(root));
-  }
-
-  @BeforeEach
-  void setUp() {
-    indices = new HashMap<>();
-    oldBalances = new ArrayList<>();
-    newBalances = new ArrayList<>();
-    store = createStoreToManipulateVotes();
   }
 
   @Test
@@ -64,7 +58,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(validatorCount);
 
     // Deltas should all be zero
@@ -86,7 +89,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(validatorCount);
 
     for (int i = 0; i < deltas.size(); i++) {
@@ -118,7 +130,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(validatorCount);
 
     // Each root should have the same delta
@@ -142,7 +163,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
 
     assertThat(deltas).hasSize(validatorCount);
     long totalDelta = BALANCE.longValue() * Integer.toUnsignedLong(validatorCount);
@@ -187,7 +217,16 @@ public class ProtoArrayScoreCalculatorTest {
     store.putVote(UInt64.valueOf(1), newVote2);
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(1);
 
     // The block should have lost both balances
@@ -214,7 +253,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(validatorCount);
 
     for (int i = 0; i < deltas.size(); i++) {
@@ -256,7 +304,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(2);
 
     // Block 1 should have only lost one balance
@@ -290,7 +347,16 @@ public class ProtoArrayScoreCalculatorTest {
     }
 
     List<Long> deltas =
-        computeDeltas(store, indices.size(), this::getIndex, oldBalances, newBalances, emptyList());
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
     assertThat(deltas).hasSize(2);
 
     // Block 1 should have lost both balances
@@ -300,6 +366,104 @@ public class ProtoArrayScoreCalculatorTest {
     assertThat(deltas.get(1)).isEqualTo(BALANCE.longValue());
 
     votesShouldBeUpdated(store);
+  }
+
+  @Test
+  void computeDeltas_addingProposerBoost() {
+    oldProposerBoostAmount = UInt64.valueOf(42);
+
+    // There are two blocks.
+    indices.put(getHash(1), 0);
+    indices.put(getHash(2), 1);
+
+    // Proposer boost is added to block 2 with a different value
+    newProposerBoostRoot = Optional.of(getHash(2));
+    newProposerBoostAmount = UInt64.valueOf(23);
+
+    List<Long> deltas =
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
+    assertThat(deltas).hasSize(2);
+
+    // Block 1 should be unchanged
+    assertThat(deltas.get(0)).isZero();
+
+    // Block 2 should have new boost amount added
+    assertThat(deltas.get(1)).isEqualTo(newProposerBoostAmount.longValue());
+  }
+
+  @Test
+  void computeDeltas_removingProposerBoost() {
+    oldProposerBoostAmount = UInt64.valueOf(42);
+    oldProposerBoostRoot = Optional.of(getHash(2));
+
+    // There are two blocks.
+    indices.put(getHash(1), 0);
+    indices.put(getHash(2), 1);
+
+    // Proposer boost is removed from block 2 with a different value
+    newProposerBoostRoot = Optional.empty();
+    newProposerBoostAmount = UInt64.valueOf(23);
+
+    List<Long> deltas =
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
+    assertThat(deltas).hasSize(2);
+
+    // Block 1 should be unchanged
+    assertThat(deltas.get(0)).isZero();
+
+    // Block 2 should have old boost amount removed
+    assertThat(deltas.get(1)).isEqualTo(-oldProposerBoostAmount.longValue());
+  }
+
+  @Test
+  void computeDeltas_changingProposerBoost() {
+    oldProposerBoostAmount = UInt64.valueOf(42);
+    oldProposerBoostRoot = Optional.of(getHash(1));
+
+    // There are two blocks.
+    indices.put(getHash(1), 0);
+    indices.put(getHash(2), 1);
+
+    // Proposer boost is removed from block 2 with a different value
+    newProposerBoostRoot = Optional.of(getHash(2));
+    newProposerBoostAmount = UInt64.valueOf(23);
+
+    List<Long> deltas =
+        computeDeltas(
+            store,
+            indices.size(),
+            this::getIndex,
+            oldBalances,
+            newBalances,
+            oldProposerBoostRoot,
+            newProposerBoostRoot,
+            oldProposerBoostAmount,
+            newProposerBoostAmount);
+    assertThat(deltas).hasSize(2);
+
+    // Block 1 should have old boost amount removed
+    assertThat(deltas.get(0)).isEqualTo(-oldProposerBoostAmount.longValue());
+
+    // Block 2 should have new boost amount added
+    assertThat(deltas.get(1)).isEqualTo(newProposerBoostAmount.longValue());
   }
 
   private void votesShouldBeUpdated(VoteUpdater store) {

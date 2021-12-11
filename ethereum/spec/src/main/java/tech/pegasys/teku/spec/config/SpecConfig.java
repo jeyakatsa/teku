@@ -16,8 +16,8 @@ package tech.pegasys.teku.spec.config;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes4;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
-import tech.pegasys.teku.ssz.type.Bytes4;
 
 public interface SpecConfig {
   // Non-configurable constants
@@ -128,6 +128,8 @@ public interface SpecConfig {
   UInt64 getSecondsPerEth1Block();
 
   int getSafeSlotsToUpdateJustified();
+
+  int getProposerScoreBoost();
 
   int getDepositChainId();
 

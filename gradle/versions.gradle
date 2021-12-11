@@ -42,7 +42,7 @@ dependencyManagement {
     dependency 'io.protostuff:protostuff-runtime:1.6.2'
 
     dependency 'io.libp2p:jvm-libp2p-minimal:0.8.3-RELEASE'
-    dependency 'tech.pegasys:jblst:0.3.6-3'
+    dependency 'tech.pegasys:jblst:0.3.6-4'
 
     dependency 'org.hdrhistogram:HdrHistogram:2.1.12'
 
@@ -96,7 +96,7 @@ dependencyManagement {
     dependency 'commons-io:commons-io:2.11.0'
     dependency 'org.apache.commons:commons-compress:1.21'
 
-    dependencySet(group: 'org.apache.logging.log4j', version: '2.13.3') {
+    dependencySet(group: 'org.apache.logging.log4j', version: '2.15.0') {
       entry 'log4j-api'
       entry 'log4j-core'
       entry 'log4j-slf4j-impl'

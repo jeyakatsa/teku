@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes32;
+import tech.pegasys.teku.infrastructure.ssz.SszList;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.config.SpecConfig;
 import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlock;
@@ -32,8 +34,6 @@ import tech.pegasys.teku.spec.logic.common.helpers.BeaconStateAccessors;
 import tech.pegasys.teku.spec.logic.common.helpers.MiscHelpers;
 import tech.pegasys.teku.spec.logic.common.helpers.Predicates;
 import tech.pegasys.teku.spec.schemas.SchemaDefinitions;
-import tech.pegasys.teku.ssz.SszList;
-import tech.pegasys.teku.ssz.collections.SszBitvector;
 
 @SuppressWarnings("unused")
 public class BeaconStateUtil {
@@ -131,8 +131,11 @@ public class BeaconStateUtil {
 
   private Stream<UInt64> streamEffectiveBalancesForCommittee(
       final BeaconState state, final UInt64 slot, final UInt64 committeeIndex) {
-    return beaconStateAccessors.getBeaconCommittee(state, slot, committeeIndex).stream()
-        .map(validatorIndex -> state.getValidators().get(validatorIndex).getEffective_balance());
+    return beaconStateAccessors
+        .getBeaconCommittee(state, slot, committeeIndex)
+        .intStream()
+        .mapToObj(
+            validatorIndex -> state.getValidators().get(validatorIndex).getEffective_balance());
   }
 
   public int computeSubnetForAttestation(final BeaconState state, final Attestation attestation) {

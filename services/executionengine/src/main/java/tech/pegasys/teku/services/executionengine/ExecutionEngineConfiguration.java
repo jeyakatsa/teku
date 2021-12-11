@@ -13,10 +13,10 @@
 
 package tech.pegasys.teku.services.executionengine;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Optional;
+import tech.pegasys.teku.infrastructure.exceptions.InvalidConfigurationException;
 import tech.pegasys.teku.spec.Spec;
+import tech.pegasys.teku.spec.SpecMilestone;
 
 public class ExecutionEngineConfiguration {
 
@@ -33,7 +33,7 @@ public class ExecutionEngineConfiguration {
   }
 
   public boolean isEnabled() {
-    return endpoint.isPresent();
+    return spec.isMilestoneSupported(SpecMilestone.MERGE);
   }
 
   public Spec getSpec() {
@@ -41,7 +41,10 @@ public class ExecutionEngineConfiguration {
   }
 
   public String getEndpoint() {
-    return endpoint.orElseThrow();
+    return endpoint.orElseThrow(
+        () ->
+            new InvalidConfigurationException(
+                "Invalid configuration. --ee-endpoint parameter is mandatory when Merge milestone is enabled"));
   }
 
   public static class Builder {
@@ -51,12 +54,7 @@ public class ExecutionEngineConfiguration {
     private Builder() {}
 
     public ExecutionEngineConfiguration build() {
-      validate();
       return new ExecutionEngineConfiguration(spec, endpoint);
-    }
-
-    private void validate() {
-      checkNotNull(spec, "Must specify a spec");
     }
 
     public Builder endpoint(final String endpoint) {

@@ -17,10 +17,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
-import tech.pegasys.teku.spec.datastructures.forkchoice.ProposerWeighting;
 import tech.pegasys.teku.spec.datastructures.forkchoice.VoteTracker;
 import tech.pegasys.teku.spec.datastructures.forkchoice.VoteUpdater;
 import tech.pegasys.teku.spec.datastructures.state.Checkpoint;
@@ -68,7 +68,8 @@ public class StoreVoteUpdater implements VoteUpdater {
       final Checkpoint finalizedCheckpoint,
       final Checkpoint justifiedCheckpoint,
       final List<UInt64> justifiedCheckpointEffectiveBalances,
-      final List<ProposerWeighting> removedProposerWeightings) {
+      final Optional<Bytes32> proposerBoostRoot,
+      final UInt64 proposerBoostAmount) {
 
     // Ensure the store lock is taken before entering forkChoiceStrategy. Otherwise it takes the
     // protoArray lock first, and may deadlock when it later needs to get votes which requires the
@@ -79,10 +80,11 @@ public class StoreVoteUpdater implements VoteUpdater {
           .getForkChoiceStrategy()
           .applyPendingVotes(
               this,
-              removedProposerWeightings,
+              proposerBoostRoot,
               finalizedCheckpoint,
               justifiedCheckpoint,
-              justifiedCheckpointEffectiveBalances);
+              justifiedCheckpointEffectiveBalances,
+              proposerBoostAmount);
     } finally {
       lock.writeLock().unlock();
     }
@@ -102,10 +104,7 @@ public class StoreVoteUpdater implements VoteUpdater {
               store.highestVotedValidatorIndex.intValue() + Store.VOTE_TRACKER_SPARE_CAPACITY);
     }
 
-    votes.forEach(
-        (key, value) -> {
-          store.votes[key.intValue()] = value;
-        });
+    votes.forEach((key, value) -> store.votes[key.intValue()] = value);
 
     voteUpdateChannel.onVotesUpdated(votes);
   }

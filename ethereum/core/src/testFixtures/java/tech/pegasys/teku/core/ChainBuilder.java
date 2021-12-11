@@ -38,6 +38,7 @@ import tech.pegasys.teku.core.signatures.LocalSigner;
 import tech.pegasys.teku.core.signatures.Signer;
 import tech.pegasys.teku.core.synccomittee.SignedContributionAndProofTestBuilder;
 import tech.pegasys.teku.infrastructure.async.SafeFuture;
+import tech.pegasys.teku.infrastructure.ssz.SszList;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.TestSpecFactory;
@@ -45,6 +46,7 @@ import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlock;
 import tech.pegasys.teku.spec.datastructures.blocks.Eth1Data;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock;
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBlockAndState;
+import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayload;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadHeader;
 import tech.pegasys.teku.spec.datastructures.interop.MockStartBeaconStateGenerator;
 import tech.pegasys.teku.spec.datastructures.interop.MockStartDepositGenerator;
@@ -64,7 +66,6 @@ import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.SlotProces
 import tech.pegasys.teku.spec.logic.common.statetransition.exceptions.StateTransitionException;
 import tech.pegasys.teku.spec.logic.common.util.SyncCommitteeUtil;
 import tech.pegasys.teku.spec.schemas.SchemaDefinitionsAltair;
-import tech.pegasys.teku.ssz.SszList;
 
 /** A utility for building small, valid chains of blocks with states for testing */
 public class ChainBuilder {
@@ -410,7 +411,9 @@ public class ChainBuilder {
               Optional.empty(),
               options.getEth1Data(),
               options.getTransactions(),
-              options.getTerminalBlockHash());
+              options.getTerminalBlockHash(),
+              options.getExecutionPayload(),
+              options.getSkipStateTransition());
       trackBlock(nextBlockAndState);
       return nextBlockAndState;
     } catch (StateTransitionException | EpochProcessingException | SlotProcessingException e) {
@@ -511,7 +514,7 @@ public class ChainBuilder {
     return result.join();
   }
 
-  private Signer getSigner(final int validatorId) {
+  public Signer getSigner(final int validatorId) {
     return new LocalSigner(spec, validatorKeys.get(validatorId), SYNC_RUNNER);
   }
 
@@ -521,6 +524,8 @@ public class ChainBuilder {
     private Optional<Eth1Data> eth1Data = Optional.empty();
     private Optional<List<Bytes>> transactions = Optional.empty();
     private Optional<Bytes32> terminalBlockHash = Optional.empty();
+    private Optional<ExecutionPayload> executionPayload = Optional.empty();
+    private boolean skipStateTransition = false;
 
     private BlockOptions() {}
 
@@ -548,6 +553,16 @@ public class ChainBuilder {
       return this;
     }
 
+    public BlockOptions setExecutionPayload(ExecutionPayload executionPayload) {
+      this.executionPayload = Optional.of(executionPayload);
+      return this;
+    }
+
+    public BlockOptions setSkipStateTransition(boolean skipStateTransition) {
+      this.skipStateTransition = skipStateTransition;
+      return this;
+    }
+
     private List<Attestation> getAttestations() {
       return attestations;
     }
@@ -562,6 +577,14 @@ public class ChainBuilder {
 
     public Optional<Bytes32> getTerminalBlockHash() {
       return terminalBlockHash;
+    }
+
+    public Optional<ExecutionPayload> getExecutionPayload() {
+      return executionPayload;
+    }
+
+    public boolean getSkipStateTransition() {
+      return skipStateTransition;
     }
   }
 }

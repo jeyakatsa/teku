@@ -16,19 +16,19 @@ package tech.pegasys.teku.spec.datastructures.execution;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszByteList;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszByteVector;
+import tech.pegasys.teku.infrastructure.ssz.containers.ContainerSchema14;
+import tech.pegasys.teku.infrastructure.ssz.primitive.SszBytes32;
+import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt256;
+import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt64;
+import tech.pegasys.teku.infrastructure.ssz.schema.SszPrimitiveSchemas;
+import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszByteListSchema;
+import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszByteVectorSchema;
+import tech.pegasys.teku.infrastructure.ssz.tree.TreeNode;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes20;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.config.SpecConfigMerge;
-import tech.pegasys.teku.ssz.collections.SszByteList;
-import tech.pegasys.teku.ssz.collections.SszByteVector;
-import tech.pegasys.teku.ssz.containers.ContainerSchema14;
-import tech.pegasys.teku.ssz.primitive.SszBytes32;
-import tech.pegasys.teku.ssz.primitive.SszUInt256;
-import tech.pegasys.teku.ssz.primitive.SszUInt64;
-import tech.pegasys.teku.ssz.schema.SszPrimitiveSchemas;
-import tech.pegasys.teku.ssz.schema.collections.SszByteListSchema;
-import tech.pegasys.teku.ssz.schema.collections.SszByteVectorSchema;
-import tech.pegasys.teku.ssz.tree.TreeNode;
-import tech.pegasys.teku.ssz.type.Bytes20;
 
 public class ExecutionPayloadHeaderSchema
     extends ContainerSchema14<
@@ -52,7 +52,7 @@ public class ExecutionPayloadHeaderSchema
     super(
         "ExecutionPayloadHeader",
         namedSchema("parent_hash", SszPrimitiveSchemas.BYTES32_SCHEMA),
-        namedSchema("coinbase", SszByteVectorSchema.create(Bytes20.SIZE)),
+        namedSchema("fee_recipient", SszByteVectorSchema.create(Bytes20.SIZE)),
         namedSchema("state_root", SszPrimitiveSchemas.BYTES32_SCHEMA),
         namedSchema("receipt_root", SszPrimitiveSchemas.BYTES32_SCHEMA),
         namedSchema("logs_bloom", SszByteVectorSchema.create(specConfig.getBytesPerLogsBloom())),
@@ -78,7 +78,7 @@ public class ExecutionPayloadHeaderSchema
 
   public ExecutionPayloadHeader create(
       Bytes32 parentHash,
-      Bytes20 coinbase,
+      Bytes20 feeRecipient,
       Bytes32 stateRoot,
       Bytes32 receiptRoot,
       Bytes logsBloom,
@@ -94,7 +94,7 @@ public class ExecutionPayloadHeaderSchema
     return new ExecutionPayloadHeader(
         this,
         SszBytes32.of(parentHash),
-        SszByteVector.fromBytes(coinbase.getWrappedBytes()),
+        SszByteVector.fromBytes(feeRecipient.getWrappedBytes()),
         SszBytes32.of(stateRoot),
         SszBytes32.of(receiptRoot),
         SszByteVector.fromBytes(logsBloom),

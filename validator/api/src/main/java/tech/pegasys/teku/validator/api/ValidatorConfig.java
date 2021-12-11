@@ -13,6 +13,8 @@
 
 package tech.pegasys.teku.validator.api;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
@@ -57,7 +59,7 @@ public class ValidatorConfig {
   private final boolean useDependentRoots;
   private final boolean generateEarlyAttestations;
   private final boolean sendAttestationsAsBatch;
-  private final Optional<Eth1Address> feeRecipient;
+  private final Optional<Eth1Address> suggestedFeeRecipient;
 
   private ValidatorConfig(
       final List<String> validatorKeys,
@@ -78,7 +80,7 @@ public class ValidatorConfig {
       final boolean generateEarlyAttestations,
       final boolean sendAttestationsAsBatch,
       final List<URI> additionalPublishUrls,
-      final Optional<Eth1Address> feeRecipient) {
+      final Optional<Eth1Address> suggestedFeeRecipient) {
     this.validatorKeys = validatorKeys;
     this.validatorExternalSignerPublicKeySources = validatorExternalSignerPublicKeySources;
     this.validatorExternalSignerUrl = validatorExternalSignerUrl;
@@ -100,7 +102,7 @@ public class ValidatorConfig {
     this.generateEarlyAttestations = generateEarlyAttestations;
     this.sendAttestationsAsBatch = sendAttestationsAsBatch;
     this.additionalPublishUrls = additionalPublishUrls;
-    this.feeRecipient = feeRecipient;
+    this.suggestedFeeRecipient = suggestedFeeRecipient;
   }
 
   public static Builder builder() {
@@ -172,12 +174,20 @@ public class ValidatorConfig {
     return additionalPublishUrls;
   }
 
-  public Optional<Eth1Address> getFeeRecipient() {
-    return feeRecipient;
+  public Optional<Eth1Address> getSuggestedFeeRecipient() {
+    validateFeeRecipient();
+    return suggestedFeeRecipient;
+  }
+
+  private void validateFeeRecipient() {
+    if (suggestedFeeRecipient.isEmpty()
+        && !(validatorKeys.isEmpty() && validatorExternalSignerPublicKeySources.isEmpty())) {
+      throw new InvalidConfigurationException(
+          "Invalid configuration. --validators-fee-recipient-address must be specified when Merge milestone is active");
+    }
   }
 
   public static final class Builder {
-
     private List<String> validatorKeys = new ArrayList<>();
     private List<URI> additionalPublishUrls = new ArrayList<>();
     private List<String> validatorExternalSignerPublicKeySources = new ArrayList<>();
@@ -200,7 +210,7 @@ public class ValidatorConfig {
     private boolean useDependentRoots = DEFAULT_USE_DEPENDENT_ROOTS;
     private boolean generateEarlyAttestations = DEFAULT_GENERATE_EARLY_ATTESTATIONS;
     private boolean sendAttestationsAsBatch = DEFAULT_SEND_ATTESTATIONS_AS_BATCH;
-    private Optional<Eth1Address> feeRecipient = Optional.empty();
+    private Optional<Eth1Address> suggestedFeeRecipient = Optional.empty();
 
     private Builder() {}
 
@@ -210,8 +220,9 @@ public class ValidatorConfig {
     }
 
     public Builder validatorExternalSignerPublicKeySources(
-        List<String> validatorExternalSignerPublicKeys) {
-      this.validatorExternalSignerPublicKeySources = validatorExternalSignerPublicKeys;
+        List<String> validatorExternalSignerPublicKeySources) {
+      checkNotNull(validatorExternalSignerPublicKeySources);
+      this.validatorExternalSignerPublicKeySources = validatorExternalSignerPublicKeySources;
       return this;
     }
 
@@ -304,16 +315,16 @@ public class ValidatorConfig {
       return this;
     }
 
-    public Builder feeRecipient(final Eth1Address feeRecipient) {
-      this.feeRecipient = Optional.ofNullable(feeRecipient);
+    public Builder suggestedFeeRecipient(final Eth1Address suggestedFeeRecipient) {
+      this.suggestedFeeRecipient = Optional.ofNullable(suggestedFeeRecipient);
       return this;
     }
 
-    public Builder feeRecipient(final String feeRecipient) {
-      if (feeRecipient == null) {
-        this.feeRecipient = Optional.empty();
+    public Builder suggestedFeeRecipient(final String suggestedFeeRecipient) {
+      if (suggestedFeeRecipient == null) {
+        this.suggestedFeeRecipient = Optional.empty();
       } else {
-        this.feeRecipient = Optional.of(Eth1Address.fromHexString(feeRecipient));
+        this.suggestedFeeRecipient = Optional.of(Eth1Address.fromHexString(suggestedFeeRecipient));
       }
       return this;
     }
@@ -342,11 +353,11 @@ public class ValidatorConfig {
           generateEarlyAttestations,
           sendAttestationsAsBatch,
           additionalPublishUrls,
-          feeRecipient);
+          suggestedFeeRecipient);
     }
 
     private void validateExternalSignerUrlAndPublicKeys() {
-      if (externalPublicKeysNotDefined()) {
+      if (validatorExternalSignerPublicKeySources.isEmpty()) {
         return;
       }
 
@@ -376,7 +387,7 @@ public class ValidatorConfig {
     }
 
     private void validateExternalSignerURLScheme() {
-      if (externalPublicKeysNotDefined() || validatorExternalSignerUrl == null) {
+      if (validatorExternalSignerPublicKeySources.isEmpty() || validatorExternalSignerUrl == null) {
         return;
       }
 
@@ -389,11 +400,6 @@ public class ValidatorConfig {
           throw new InvalidConfigurationException(errorMessage);
         }
       }
-    }
-
-    private boolean externalPublicKeysNotDefined() {
-      return validatorExternalSignerPublicKeySources == null
-          || validatorExternalSignerPublicKeySources.isEmpty();
     }
 
     private static boolean isURLSchemeHttps(final URL url) {

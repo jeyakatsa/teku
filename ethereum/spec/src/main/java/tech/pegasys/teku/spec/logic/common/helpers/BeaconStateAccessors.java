@@ -26,6 +26,8 @@ import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.bls.BLSPublicKey;
 import tech.pegasys.teku.infrastructure.collections.TekuPair;
 import tech.pegasys.teku.infrastructure.crypto.Hash;
+import tech.pegasys.teku.infrastructure.ssz.SszList;
+import tech.pegasys.teku.infrastructure.ssz.type.Bytes4;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.config.SpecConfig;
 import tech.pegasys.teku.spec.constants.Domain;
@@ -34,8 +36,6 @@ import tech.pegasys.teku.spec.datastructures.state.ForkInfo;
 import tech.pegasys.teku.spec.datastructures.state.Validator;
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState;
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconStateCache;
-import tech.pegasys.teku.ssz.SszList;
-import tech.pegasys.teku.ssz.type.Bytes4;
 
 public abstract class BeaconStateAccessors {
   protected final SpecConfig config;
@@ -141,6 +141,14 @@ public abstract class BeaconStateAccessors {
         .get(
             getCurrentEpoch(state),
             epoch -> getTotalBalance(state, getActiveValidatorIndices(state, epoch)));
+  }
+
+  public UInt64 getProposerBoostAmount(final BeaconState state) {
+    final int numValidators = getActiveValidatorIndices(state, getCurrentEpoch(state)).size();
+    final UInt64 avgBalance = getTotalActiveBalance(state).dividedBy(numValidators);
+    final long committeeSize = numValidators / config.getSlotsPerEpoch();
+    final UInt64 committeeWeight = avgBalance.times(committeeSize);
+    return committeeWeight.times(config.getProposerScoreBoost()).dividedBy(100);
   }
 
   public Bytes32 getSeed(BeaconState state, UInt64 epoch, Bytes4 domain_type)
