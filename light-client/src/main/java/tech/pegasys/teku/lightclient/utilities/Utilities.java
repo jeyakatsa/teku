@@ -32,8 +32,8 @@ public class Utilities {
         return true;
     }
 
-    List<Bytes32> rootArray = new ArrayList<Bytes32>();
-    public void assertZeroHashes(int expectedLength, String errorMessage) {
+    public void assertZeroHashes(Bytes32 rootsArray, int expectedLength) {
+        byte[] rootArray = rootsArray.toArray();
         if (rootArray.length != expectedLength) {
             throw new IllegalArgumentException(`Wrong Length`);
         }
