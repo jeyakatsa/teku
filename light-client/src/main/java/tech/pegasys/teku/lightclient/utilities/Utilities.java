@@ -20,18 +20,14 @@ public class Utilities {
         return sum;
     }
 
-    private Bytes32[] root;
-    private Bytes32[] getRoot() {
-        return root;
-    }
-    private void setRoot(Bytes32[] root) {
-        this.root = root;
-    }
-
+    //byte function below replaced in place of
+    //Bytes32 class that could not be implemented
+    //within for loop below.
+    byte[] root = new byte[32];
 
     public boolean isZeroHash() {
-        for (int i = 0; i < getRoot().length; i++) {
-            if (getRoot(i) != 0) {
+        for (int i = 0; i < root.length; i++) {
+            if (root[i] != 0) {
                 return false;
             }
         }
