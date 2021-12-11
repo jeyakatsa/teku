@@ -3,9 +3,9 @@ package tech.pegasys.teku.lightclient.client;
 import tech.pegasys.teku.bls.impl.blst.BlstSignature;
 import tech.pegasys.teku.spec.SpecVersion;
 import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlockHeader;
-import tech.pegasys.teku.ssz.SszVector;
-import tech.pegasys.teku.ssz.collections.SszBitvector;
-import tech.pegasys.teku.ssz.primitive.SszBytes32;
+import tech.pegasys.teku.infrastructure.ssz.SszVector;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector;
+import tech.pegasys.teku.infrastructure.ssz.primitive.SszBytes32;
 
 public class LightClientUpdate {
 
