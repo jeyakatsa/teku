@@ -24,8 +24,8 @@ public class Utilities {
     //within for loop below.
     byte[] root = new byte[32];
     public boolean isZeroHash(byte root) {
-        for (int i = 0; i < this.root.length; i++) {
-            if (this.root[i] != 0) {
+        for (byte b : this.root) {
+            if (b != 0) {
                 return false;
             }
         }
@@ -45,4 +45,11 @@ public class Utilities {
         }
    }
 
+    /**
+     * Function below is to guarantee that all bits have a corresponding pubkey
+     */
+    public class Box<T>{
+
+    }
+    public T getParticipantPubkeys<T>() {}
 }
