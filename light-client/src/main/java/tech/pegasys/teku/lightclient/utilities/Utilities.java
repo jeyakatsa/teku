@@ -23,9 +23,9 @@ public class Utilities {
     //Bytes32 class that could not be implemented
     //within for loop below.
     byte[] root = new byte[32];
-    public boolean isZeroHash() {
-        for (int i = 0; i < root.length; i++) {
-            if (root[i] != 0) {
+    public boolean isZeroHash(byte root) {
+        for (int i = 0; i < this.root.length; i++) {
+            if (this.root[i] != 0) {
                 return false;
             }
         }
@@ -35,12 +35,12 @@ public class Utilities {
     public void assertZeroHashes(Bytes32 rootsArray, int expectedLength) {
         byte[] rootArray = rootsArray.toArray();
         if (rootArray.length != expectedLength) {
-            throw new IllegalArgumentException(`Wrong Length`);
+            throw new Error("Wrong Length");
         }
 
-        for (const root of rootArray) {
+        for (byte root : rootArray) {
             if (!isZeroHash(root)) {
-                throw Error(`Not zeroed ${errorMessage}`);
+                throw new Error("Not zeroed");
             }
         }
    }
