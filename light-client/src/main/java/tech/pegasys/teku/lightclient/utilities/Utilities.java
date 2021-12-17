@@ -1,15 +1,17 @@
 package tech.pegasys.teku.lightclient.utilities;
 
 import org.apache.tuweni.bytes.Bytes32;
+import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector;
 
+import javax.management.openmbean.ArrayType;
 import java.util.*;
 
-public class Utilities {
+public class Utilities<T> {
 
     // IMPORTANT: bits List was supposed to be a Generic Array,
     // but Java does not support Generic Arrays cohesively
-    List<Boolean> bits = new ArrayList<Boolean>();
     public int sumBits() {
+        List<Boolean> bits = new ArrayList<Boolean>();
         int sum = 0;
         for (boolean bit : bits) {
             if (bit) {
@@ -48,8 +50,8 @@ public class Utilities {
     /**
      * Function below is to guarantee that all bits have a corresponding pubkey
      */
-    public class Box<T>{
-
+    List<T> pubKeys = new ArrayList<T>();
+    public T[] getParticipantPubkeys(SszBitvector bits) {
+        T[] ParticipantPubkeys = new ArrayType<T>(T);
     }
-    public T getParticipantPubkeys<T>() {}
 }
