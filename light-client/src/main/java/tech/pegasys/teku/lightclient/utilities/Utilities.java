@@ -2,6 +2,8 @@ package tech.pegasys.teku.lightclient.utilities;
 
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector;
+import tech.pegasys.teku.infrastructure.ssz.collections.impl.SszBitvectorImpl;
+import tech.pegasys.teku.infrastructure.ssz.schema.collections.impl.SszBitvectorSchemaImpl;
 
 import javax.management.openmbean.ArrayType;
 import java.util.*;
@@ -51,7 +53,14 @@ public class Utilities<T> {
      * Function below is to guarantee that all bits have a corresponding pubkey
      */
     List<T> pubKeys = new ArrayList<T>();
-    public T[] getParticipantPubkeys(SszBitvector bits) {
-        T[] ParticipantPubkeys = new ArrayType<T>(T);
+    public T[] getParticipantPubkeys() {
+//        bits could not convert to array succinctly as a sole Vector
+//        had to be converted to an object array.
+        Vector<Boolean> vector = new Vector<Boolean>();
+        Object[] bits = vector.toArray();
+        T[] ParticipantPubkeys;
+        for (int i = 0; i < bits.length; i++){
+
+        }
     }
 }
