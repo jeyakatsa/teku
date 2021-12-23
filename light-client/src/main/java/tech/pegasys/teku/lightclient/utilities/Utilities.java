@@ -52,15 +52,21 @@ public class Utilities<T> {
     /**
      * Function below is to guarantee that all bits have a corresponding pubkey
      */
-    List<T> pubKeys = new ArrayList<T>();
     public T[] getParticipantPubkeys() {
 //        bits could not convert to array succinctly as a sole Vector
 //        had to be converted to an object array.
         Vector<Boolean> vector = new Vector<Boolean>();
-        Object[] bits = vector.toArray();
-        T[] ParticipantPubkeys;
+        Boolean[] bits = (Boolean[]) vector.toArray();
+        List<T> pubkeys = new ArrayList<T>();
+        T[] participantPubkeys = null;
         for (int i = 0; i < bits.length; i++){
-
+            if (bits[i]){
+                if (pubkeys.get(i) == null) {
+                    throw new Error("No such pubkey in syncCommittee");
+                }
+                participantPubkeys.push(pubkeys.get(i));
+            }
         }
+        return null;
     }
 }
