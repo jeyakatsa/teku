@@ -1,6 +1,7 @@
 package tech.pegasys.teku.lightclient.utilities;
 
 import org.apache.tuweni.bytes.Bytes32;
+import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlockHeader;
 
 import java.util.*;
 
@@ -50,8 +51,8 @@ public class Utilities<T> {
      * @return
      */
     public Stack<T> getParticipantPubkeys() {
-//        bits could not convert to array succinctly as a sole Vector
-//        had to be converted to an object array.
+        // bits could not convert to array succinctly as a sole Vector
+        // had to be converted to an object array.
         Vector<Boolean> vector = new Vector<Boolean>();
         Boolean[] bits = (Boolean[]) vector.toArray();
         List<T> pubkeys = new ArrayList<T>();
@@ -66,4 +67,12 @@ public class Utilities<T> {
         }
         return participantPubkeys;
     }
+
+    public BeaconBlockHeader toBlockHeader () {
+        private BeaconBlock block;
+        return {
+
+        };
+    }
+
 }

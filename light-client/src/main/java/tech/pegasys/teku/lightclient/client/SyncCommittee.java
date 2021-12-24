@@ -1,8 +1,8 @@
 package tech.pegasys.teku.lightclient.client;
 
 import tech.pegasys.teku.bls.impl.PublicKey;
+import tech.pegasys.teku.infrastructure.ssz.SszVector;
 import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
-import tech.pegasys.teku.ssz.SszVector;
 
 public class SyncCommittee {
 
