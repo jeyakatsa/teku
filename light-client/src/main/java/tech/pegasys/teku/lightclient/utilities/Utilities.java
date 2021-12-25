@@ -1,7 +1,6 @@
 package tech.pegasys.teku.lightclient.utilities;
 
 import org.apache.tuweni.bytes.Bytes32;
-import tech.pegasys.teku.spec.datastructures.blocks.BeaconBlockHeader;
 import tech.pegasys.teku.spec.datastructures.blocks.NodeSlot;
 import tech.pegasys.teku.spec.datastructures.blocks.SlotAndBlockRoot;
 
@@ -70,11 +69,6 @@ public class Utilities<T> {
         return participantPubkeys;
     }
 
-    public BeaconBlockHeader toBlockHeader () {
-        NodeSlot block;
-        //"ProposerIndex" might not be necessary here, but to be added if need be.
-        SlotAndBlockRoot slotAndBlockRoot;
-        return block;
-    }
+
 
 }
