@@ -26,5 +26,7 @@ public class ToBlockHeader extends BeaconBlockHeader {
         return bodyRoot;
     }
 
+    //"ProposerIndex might or might not be necessary for this class"
+
 
 }
