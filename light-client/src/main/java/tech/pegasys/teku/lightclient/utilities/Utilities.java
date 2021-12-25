@@ -69,6 +69,11 @@ public class Utilities<T> {
         return participantPubkeys;
     }
 
+    private ToBlockHeader toBlockHeader;
+    private ToBlockHeader getToBlockHeader () {
+        return toBlockHeader;
+    }
+
 
 
 }
