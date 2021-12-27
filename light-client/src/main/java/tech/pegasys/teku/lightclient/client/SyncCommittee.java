@@ -7,7 +7,7 @@ import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
 public class SyncCommittee {
 
     // PubKey functions below are immutable
-    // the below functions are used by the lightClientSnapshot class
+    // the below functions are used by the lightClientSnapshot
 
     private PublicKey pubKey;
 
