@@ -6,8 +6,6 @@ import tech.pegasys.teku.lightclient.client.LightClientUpdate;
 
 public interface DeserializePubkeys extends PublicKey {
 
-    //nextSyncCommittee function to be added
-
     //Functions below extend from PublicKey interface.
     LightClientUpdate pubkeys = new LightClientUpdate() {
         public Bytes48 toBytesCompressed() {
