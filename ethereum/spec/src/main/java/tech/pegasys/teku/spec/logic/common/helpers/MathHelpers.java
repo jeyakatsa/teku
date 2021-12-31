@@ -22,18 +22,25 @@ import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 
 public class MathHelpers {
 
-  public static UInt64 integerSquareRoot(int n) {
-    return integerSquareRoot(UInt64.valueOf(n));
+  public static long integerSquareRoot(long n) {
+    checkArgument(n >= 0, "Cannot calculate integerSquareRoot of negative number");
+    return integerSquareRootInternal(n);
   }
 
   public static UInt64 integerSquareRoot(UInt64 n) {
-    checkArgument(
-        n.compareTo(UInt64.ZERO) >= 0, "checkArgument threw an exception in integerSquareRoot()");
-    UInt64 x = n;
-    UInt64 y = x.plus(UInt64.ONE).dividedBy(2);
-    while (y.compareTo(x) < 0) {
+    if (n.compareTo(UInt64.MAX_VALUE) >= 0) {
+      throw new ArithmeticException("uint64 overflow");
+    }
+    return UInt64.valueOf(integerSquareRootInternal(n.longValue()));
+  }
+
+  private static long integerSquareRootInternal(long n) {
+    long x = n;
+    long y = Long.divideUnsigned(x + 1, 2);
+    while (Long.compareUnsigned(y, x) < 0) {
       x = y;
-      y = x.plus(n.dividedBy(x)).dividedBy(2);
+      final long nDividedByX = Long.divideUnsigned(n, x);
+      y = Long.divideUnsigned(x + nDividedByX, 2);
     }
     return x;
   }

@@ -17,8 +17,10 @@ import static tech.pegasys.teku.test.acceptance.dsl.ValidatorLivenessExpectation
 import static tech.pegasys.teku.test.acceptance.dsl.ValidatorLivenessExpectation.expectNotLive;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import tech.pegasys.teku.infrastructure.time.SystemTimeProvider;
+import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.test.acceptance.dsl.AcceptanceTestBase;
 import tech.pegasys.teku.test.acceptance.dsl.TekuNode;
 
@@ -33,30 +35,36 @@ public class ValidatorLivenessAcceptanceTest extends AcceptanceTestBase {
 
   @BeforeEach
   public void setup() {
-    final int genesisTime = timeProvider.getTimeInSeconds().plus(5).intValue();
+    final UInt64 altairEpoch = UInt64.valueOf(100);
+    final int genesisTime = timeProvider.getTimeInSeconds().plus(10).intValue();
     primaryNode =
         createTekuNode(
-            config -> configureNode(config, genesisTime).withInteropValidators(0, NODE_VALIDATORS));
+            config ->
+                configureNode(config, genesisTime)
+                    .withAltairEpoch(altairEpoch)
+                    .withInteropValidators(0, NODE_VALIDATORS));
     secondaryNode =
         createTekuNode(
             config ->
                 configureNode(config, genesisTime)
+                    .withAltairEpoch(altairEpoch)
                     .withInteropValidators(NODE_VALIDATORS, NODE_VALIDATORS)
                     .withPeers(primaryNode));
   }
 
   /*
    * Primary and Secondary node, each with half of the validators
-   *  - Primary is online at genesis, so during epoch 1 all validators should be performing duties.
-   *  - no validator keys from the secondary will be seen as active in epoch 1.
+   *  - Primary is online at genesis, it's validators should be always performing duties.
+   *  - no validator keys from the secondary will be seen as active in epoch 0 or 1.
    *  - Secondary is online at epoch 2, so by epoch 3 should all be performing duties.
-   *  - by epoch 4, all validators should be seen as performing duties in epoch 3
+   *  - by epoch 5, all validators should be seen as performing duties in epoch 3
    */
   @Test
+  @Disabled("this test has been flaking (88% over last 100 CI) #4821")
   void shouldTrackValidatorLivenessOverEpochs() throws Exception {
     primaryNode.start();
 
-    primaryNode.waitForBlockAtOrAfterSlot(8);
+    primaryNode.waitForEpoch(2);
     secondaryNode.start();
     primaryNode.checkValidatorLiveness(
         1,
@@ -64,9 +72,12 @@ public class ValidatorLivenessAcceptanceTest extends AcceptanceTestBase {
         expectLive(0, NODE_VALIDATORS),
         expectNotLive(NODE_VALIDATORS, NODE_VALIDATORS));
 
-    primaryNode.waitForBlockAtOrAfterSlot(16);
+    primaryNode.waitForEpoch(5);
     primaryNode.checkValidatorLiveness(3, TOTAL_VALIDATORS, expectLive(0, TOTAL_VALIDATORS));
     secondaryNode.checkValidatorLiveness(3, TOTAL_VALIDATORS, expectLive(0, TOTAL_VALIDATORS));
+
+    secondaryNode.stop();
+    primaryNode.stop();
   }
 
   private TekuNode.Config configureNode(final TekuNode.Config node, final int genesisTime) {

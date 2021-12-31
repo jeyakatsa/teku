@@ -13,8 +13,6 @@
 
 package tech.pegasys.teku.test.acceptance;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +26,7 @@ import tech.pegasys.teku.test.acceptance.dsl.TekuValidatorNode;
 public class SyncCommitteeGossipAcceptanceTest extends AcceptanceTestBase {
   private static final int NODE_VALIDATORS = 8;
   private static final int TOTAL_VALIDATORS = NODE_VALIDATORS * 2;
+  private final String network = "less-swift";
 
   private final SystemTimeProvider timeProvider = new SystemTimeProvider();
   private TekuNode primaryNode;
@@ -36,7 +35,7 @@ public class SyncCommitteeGossipAcceptanceTest extends AcceptanceTestBase {
 
   @BeforeEach
   public void setup() {
-    final int genesisTime = timeProvider.getTimeInSeconds().plus(5).intValue();
+    final int genesisTime = timeProvider.getTimeInSeconds().plus(15).intValue();
     primaryNode =
         createTekuNode(
             config -> configureNode(config, genesisTime).withInteropValidators(0, NODE_VALIDATORS));
@@ -51,8 +50,7 @@ public class SyncCommitteeGossipAcceptanceTest extends AcceptanceTestBase {
         createValidatorNode(
             config ->
                 config
-                    .withNetwork("minimal")
-                    .withAltairEpoch(UInt64.ZERO)
+                    .withNetwork(network)
                     .withInteropValidators(NODE_VALIDATORS, NODE_VALIDATORS)
                     .withBeaconNode(secondaryNode));
   }
@@ -66,27 +64,24 @@ public class SyncCommitteeGossipAcceptanceTest extends AcceptanceTestBase {
     secondaryNode.startEventListener(List.of(EventType.contribution_and_proof));
     validatorClient.start();
 
+    primaryNode.waitForEpoch(1);
+
+    // primary node has validators 1-7, expect gossip from aggregators 8-15 coming through
+    primaryNode.waitForContributionAndProofEvent(
+        proof -> proof.message.aggregatorIndex.isGreaterThanOrEqualTo(8));
+
+    // secondary node has remote validators 8-15, expect gossip from aggregators 1-7
+    secondaryNode.waitForContributionAndProofEvent(
+        proof -> proof.message.aggregatorIndex.isLessThan(8));
+
     secondaryNode.waitForFullSyncCommitteeAggregate();
     validatorClient.stop();
     secondaryNode.stop();
     primaryNode.stop();
-
-    // primary node has validators 1-7, expect gossip from aggregators 8-15 coming through
-    assertThat(
-            primaryNode.getContributionAndProofEvents().stream()
-                .filter(proof -> proof.message.aggregatorIndex.isGreaterThanOrEqualTo(8))
-                .count())
-        .isGreaterThan(0);
-    // secondary node has remote validators 8-15, expect gossip from aggregators 1-7
-    assertThat(
-            secondaryNode.getContributionAndProofEvents().stream()
-                .filter(proof -> proof.message.aggregatorIndex.isLessThan(8))
-                .count())
-        .isGreaterThan(0);
   }
 
   private TekuNode.Config configureNode(final TekuNode.Config node, final int genesisTime) {
-    return node.withNetwork("minimal")
+    return node.withNetwork(network)
         .withAltairEpoch(UInt64.ZERO)
         .withGenesisTime(genesisTime)
         .withInteropNumberOfValidators(TOTAL_VALIDATORS)
