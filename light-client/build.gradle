@@ -9,7 +9,6 @@ repositories {
 }
 
 dependencies {
-    implementation project(':bls')
     implementation project(':ethereum:core')
     implementation project(':ethereum:networks')
     implementation project(':ethereum:spec')
