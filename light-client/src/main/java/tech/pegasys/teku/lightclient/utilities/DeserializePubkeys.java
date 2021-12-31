@@ -1,10 +1,10 @@
 package tech.pegasys.teku.lightclient.utilities;
 
 import org.apache.tuweni.bytes.Bytes48;
-import tech.pegasys.teku.bls.impl.PublicKey;
 import tech.pegasys.teku.lightclient.client.LightClientUpdate;
+import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
 
-public interface DeserializePubkeys extends PublicKey {
+public class DeserializePubkeys extends SszPublicKey {
 
     //Functions below extend from PublicKey interface.
     LightClientUpdate pubkeys = new LightClientUpdate() {
@@ -29,4 +29,7 @@ public interface DeserializePubkeys extends PublicKey {
     };
 
 
+    public DeserializePubkeys(Bytes48 publicKeyBytes) {
+        super(publicKeyBytes);
+    }
 }
