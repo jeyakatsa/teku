@@ -4,7 +4,14 @@ import org.apache.tuweni.bytes.Bytes48;
 import tech.pegasys.teku.lightclient.client.LightClientUpdate;
 import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
 
+import java.lang.reflect.Array;
+
 public class DeserializePubkeys extends SszPublicKey {
+
+    public DeserializePubkeys(Bytes48 publicKeyBytes) {
+        super(publicKeyBytes);
+        return Array.set(pubkeys).map((pk) => SszPublicKey.fromBytes(pk.valueOf() as Uint64));
+    }
 
     //Functions below extend from PublicKey interface.
     LightClientUpdate pubkeys = new LightClientUpdate() {
@@ -29,7 +36,7 @@ public class DeserializePubkeys extends SszPublicKey {
     };
 
 
-    public DeserializePubkeys(Bytes48 publicKeyBytes) {
-        super(publicKeyBytes);
-    }
+
+
+
 }
