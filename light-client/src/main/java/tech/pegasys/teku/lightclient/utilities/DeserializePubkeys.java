@@ -1,42 +1,59 @@
 package tech.pegasys.teku.lightclient.utilities;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes48;
-import tech.pegasys.teku.lightclient.client.LightClientUpdate;
-import tech.pegasys.teku.spec.datastructures.type.SszPublicKey;
+import tech.pegasys.teku.bls.impl.PublicKey;
+import tech.pegasys.teku.bls.impl.Signature;
 
 import java.lang.reflect.Array;
 
-public class DeserializePubkeys extends SszPublicKey {
+public class DeserializePubkeys {
 
-    public DeserializePubkeys(Bytes48 publicKeyBytes) {
-        super(publicKeyBytes);
-        return Array.set(pubkeys).map((pk) => SszPublicKey.fromBytes(pk.valueOf() as Uint64));
+    public DeserializePubkeys() {
+        return Array.get;
+        .map((pk) => PublicKey.fromBytes(pk.valueOf() as Uint64));
     }
 
     //Functions below extend from PublicKey interface.
-    LightClientUpdate pubkeys = new LightClientUpdate() {
+    PublicKey pubkeys = new PublicKey() {
+        @Override
         public Bytes48 toBytesCompressed() {
             return null;
         }
+
+        @Override
+        public boolean verifySignature(Signature signature, Bytes message) {
+            return PublicKey.super.verifySignature(signature, message);
+        }
+
+        @Override
+        public boolean verifySignature(Signature signature, Bytes message, String dst) {
+            return PublicKey.super.verifySignature(signature, message, dst);
+        }
+
+        @Override
         public void forceValidation() throws IllegalArgumentException {
 
         }
+
+        @Override
         public boolean isInGroup() {
             return false;
         }
+
+        @Override
         public boolean isValid() {
             return false;
         }
+
+        @Override
         public int hashCode() {
             return 0;
         }
+
+        @Override
         public boolean equals(Object obj) {
             return false;
         }
     };
-
-
-
-
-
 }
