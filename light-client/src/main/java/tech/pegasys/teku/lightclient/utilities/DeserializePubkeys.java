@@ -4,17 +4,28 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes48;
 import tech.pegasys.teku.bls.impl.PublicKey;
 import tech.pegasys.teku.bls.impl.Signature;
+import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 
-import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class DeserializePubkeys {
 
     public DeserializePubkeys() {
-        return Array.get;
-        .map((pk) => PublicKey.fromBytes(pk.valueOf() as Uint64));
+
+        UInt64 pk;
+        Object[] mapped = Arrays.stream(new PublicKey[]{pubkeys})
+                .map(
+                        function(pk)
+                            PublicKey.fromBytes(pk.valueOf() as Uint8Array)
+
+                        );
+//        return Array.from(pubkeys).map((pk) => PublicKey.fromBytes(pk.valueOf() as Uint8Array));
     }
 
-    //Functions below extend from PublicKey interface.
+    private Object function(UInt64 pk) {
+    }
+
+    //Functions below extends from PublicKey interface.
     PublicKey pubkeys = new PublicKey() {
         @Override
         public Bytes48 toBytesCompressed() {
