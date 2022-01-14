@@ -146,7 +146,7 @@ public abstract class AbstractDataBackedRestAPIIntegrationTest {
     forkChoice =
         useMockForkChoice
             ? mock(ForkChoice.class)
-            : ForkChoice.create(
+            : new ForkChoice(
                 spec, new InlineEventThread(), recentChainData, mock(ForkChoiceNotifier.class));
     beaconChainUtil =
         BeaconChainUtil.create(
@@ -156,22 +156,23 @@ public abstract class AbstractDataBackedRestAPIIntegrationTest {
   private void setupAndStartRestAPI(BeaconRestApiConfig config) {
     combinedChainDataClient = storageSystem.combinedChainDataClient();
     dataProvider =
-        new DataProvider(
-            spec,
-            recentChainData,
-            combinedChainDataClient,
-            eth2P2PNetwork,
-            syncService,
-            validatorApiChannel,
-            attestationPool,
-            blockManager,
-            attestationManager,
-            true,
-            activeValidatorChannel,
-            attesterSlashingPool,
-            proposerSlashingPool,
-            voluntaryExitPool,
-            syncCommitteeContributionPool);
+        DataProvider.builder()
+            .spec(spec)
+            .recentChainData(recentChainData)
+            .combinedChainDataClient(combinedChainDataClient)
+            .p2pNetwork(eth2P2PNetwork)
+            .syncService(syncService)
+            .validatorApiChannel(validatorApiChannel)
+            .blockManager(blockManager)
+            .attestationManager(attestationManager)
+            .activeValidatorChannel(activeValidatorChannel)
+            .attestationPool(attestationPool)
+            .attesterSlashingPool(attesterSlashingPool)
+            .proposerSlashingPool(proposerSlashingPool)
+            .voluntaryExitPool(voluntaryExitPool)
+            .syncCommitteeContributionPool(syncCommitteeContributionPool)
+            .build();
+
     beaconRestApi =
         new BeaconRestApi(dataProvider, config, eventChannels, SyncAsyncRunner.SYNC_RUNNER);
     beaconRestApi.start();

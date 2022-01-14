@@ -1,6 +1,8 @@
+
 # Changelog
 
 ## Upcoming Breaking Changes
+- Support for the Pyrmont testnet will be removed in an upcoming release. The Prater testnet should be used instead.
 - The `/teku/v1/beacon/states/:state_id` endpoint has been deprecated in favor of the standard API `/eth/v1/debug/beacon/states/:state_id` which now returns the state as SSZ when the `Accept: application/octet-stream` header is specified on the request.
 - The `/eth/v1/debug/beacon/states/:state_id` endpoint has been deprecated in favor of the v2 Altair endpoint `/eth/v2/debug/beacon/states/:state_id`
 - The `/eth/v1/beacon/blocks/:block_id` endpoint has been deprecated in favor of the v2 Altair endpoint `/eth/v2/beacon/blocks/:block_id`
@@ -11,18 +13,12 @@
 For information on changes in released versions of Teku, see the [releases page](https://github.com/ConsenSys/teku/releases).
 
 ## Unreleased Changes
-### Breaking Changes
-* API users should switch to using response 'code' from BadRequests, rather than 'status' field, in line with the standard API.
-
 ### Additions and Improvements
-* Added `kintsugi` network definition. 
-* Optimised discv5 by caching calculated node ID.
-* Avoided object allocation when calculating integer square root values.
+* Optimised sync committee processing to avoid duplicate group checks for public keys.
+* Reduced amount of data copying required when calculating sha256 hashes and use a more efficient sha256 implementation when available.
+* Updated Javalin to version 4.2.0.
+* Added periodic keep alive to event stream.
 
 ### Bug Fixes
-* Updated to log4j 2.17.1.
-* Made BadRequests compliant with the api, returning 'code' rather than 'status'.
-* Fixed: Invalid sync contributions were created if a validator was present multiple times in the same sync sub-committee.
-* Reduced error to warning when sync contribution cannot be created because the beacon node has no matching sync messages.
-* Fixed issue where validator duties were not performed during the first epoch after startup.
-* Updated jvm-libp2p to improve negotiation of mplex and multistream connections.
+* Rest api endpoints accepting validator IDs will no longer reject valid bytes48 hex strings that are not on the g2 curve.
+* Upgraded discovery to fix `ConcurrentModificationException`

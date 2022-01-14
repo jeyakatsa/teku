@@ -94,7 +94,7 @@ public class SyncingNodeManager {
     chainUtil.initializeStorage();
 
     ForkChoice forkChoice =
-        ForkChoice.create(
+        new ForkChoice(
             spec, new InlineEventThread(), recentChainData, mock(ForkChoiceNotifier.class));
     BlockImporter blockImporter =
         new BlockImporter(
@@ -109,8 +109,8 @@ public class SyncingNodeManager {
     final FutureItems<SignedBeaconBlock> futureBlocks =
         FutureItems.create(SignedBeaconBlock::getSlot);
     BlockManager blockManager =
-        BlockManager.create(
-            pendingBlocks, futureBlocks, recentChainData, blockImporter, blockValidator);
+        new BlockManager(
+            recentChainData, blockImporter, pendingBlocks, futureBlocks, blockValidator);
 
     eventChannels
         .subscribe(SlotEventsChannel.class, blockManager)

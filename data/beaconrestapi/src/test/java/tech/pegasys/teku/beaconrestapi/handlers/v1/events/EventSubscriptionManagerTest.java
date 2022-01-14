@@ -161,7 +161,7 @@ public class EventSubscriptionManagerTest {
   }
 
   @Test
-  void shouldPropagateContributions() throws IOException {
+  void shouldPropagateContributions() {
     when(req.getQueryString()).thenReturn("&topics=contribution_and_proof");
     manager.registerClient(client1);
 
@@ -171,7 +171,7 @@ public class EventSubscriptionManagerTest {
   }
 
   @Test
-  void shouldPropagateHeadAndReorg() throws IOException {
+  void shouldPropagateHeadAndReorg() {
     when(req.getQueryString()).thenReturn("&topics=chain_reorg,head");
     manager.registerClient(client1);
 
@@ -182,7 +182,7 @@ public class EventSubscriptionManagerTest {
   }
 
   @Test
-  void shouldPropagateMultipleMessagesIfSubscribed() throws IOException {
+  void shouldPropagateMultipleMessagesIfSubscribed() {
     when(req.getQueryString()).thenReturn("&topics=chain_reorg,finalized_checkpoint");
     manager.registerClient(client1);
 
@@ -274,7 +274,7 @@ public class EventSubscriptionManagerTest {
     when(req.getQueryString()).thenReturn("&topics=head");
     manager.registerClient(client1);
     triggerFinalizedCheckpointEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   @Test
@@ -283,7 +283,7 @@ public class EventSubscriptionManagerTest {
     manager.registerClient(client1);
 
     triggerReorgEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   @Test
@@ -292,7 +292,7 @@ public class EventSubscriptionManagerTest {
     manager.registerClient(client1);
 
     triggerHeadEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   @Test
@@ -301,7 +301,7 @@ public class EventSubscriptionManagerTest {
     manager.registerClient(client1);
 
     triggerBlockEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   @Test
@@ -310,7 +310,7 @@ public class EventSubscriptionManagerTest {
     manager.registerClient(client1);
 
     triggerAttestationEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   @Test
@@ -319,7 +319,7 @@ public class EventSubscriptionManagerTest {
     manager.registerClient(client1);
 
     triggerVoluntaryExitEvent();
-    assertThat(outputStream.getWriteCounter()).isEqualTo(0);
+    assertThat(outputStream.countEvents()).isEqualTo(0);
   }
 
   private void triggerVoluntaryExitEvent() {
