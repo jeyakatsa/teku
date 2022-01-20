@@ -13,14 +13,18 @@
 
 package tech.pegasys.teku.infrastructure.restapi;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static tech.pegasys.teku.infrastructure.http.HttpStatusCodes.SC_INTERNAL_SERVER_ERROR;
 import static tech.pegasys.teku.infrastructure.restapi.types.CoreTypes.HTTP_ERROR_RESPONSE_TYPE;
 
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
+import io.javalin.core.security.AccessManager;
 import io.javalin.jetty.JettyUtil;
-import java.net.InetSocketAddress;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +34,13 @@ import java.util.OptionalInt;
 import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import tech.pegasys.teku.infrastructure.http.HttpErrorResponse;
 import tech.pegasys.teku.infrastructure.restapi.endpoints.JavalinEndpointAdapter;
 import tech.pegasys.teku.infrastructure.restapi.endpoints.RestApiEndpoint;
@@ -54,6 +61,9 @@ public class RestApiBuilder {
 
   private final OpenApiDocBuilder openApiDocBuilder = new OpenApiDocBuilder();
   private boolean openApiDocsEnabled = false;
+  private Optional<AccessManager> accessManager = Optional.empty();
+  private Optional<Path> maybeKeystorePath = Optional.empty();
+  private Optional<Path> maybePasswordPath = Optional.empty();
 
   public RestApiBuilder listenAddress(final String listenAddress) {
     this.listenAddress = listenAddress;
@@ -62,6 +72,17 @@ public class RestApiBuilder {
 
   public RestApiBuilder port(final int port) {
     this.port = port;
+    return this;
+  }
+
+  public RestApiBuilder sslCertificate(final Path sslPath, final Path sslPasswordPath) {
+    this.maybeKeystorePath = Optional.of(sslPath);
+    this.maybePasswordPath = Optional.ofNullable(sslPasswordPath);
+    return this;
+  }
+
+  public RestApiBuilder passwordFilePath(final Path passwordFilePath) {
+    checkAccessFile(passwordFilePath);
     return this;
   }
 
@@ -107,6 +128,7 @@ public class RestApiBuilder {
         Javalin.create(
             config -> {
               config.defaultContentType = "application/json";
+              accessManager.ifPresent(config::accessManager);
               config.showJavalinBanner = false;
               configureCors(config);
               config.server(this::createJettyServer);
@@ -127,6 +149,19 @@ public class RestApiBuilder {
       restApiDocs = Optional.of(apiDocs);
     }
     return new RestApi(app, restApiDocs);
+  }
+
+  private void checkAccessFile(final Path path) {
+    if (!path.toFile().exists()) {
+      try {
+        final Bytes generated = Bytes.random(16);
+        LOG.info("Initializing API auth access file {}", path.toAbsolutePath());
+        Files.writeString(path, generated.toUnprefixedHexString(), UTF_8);
+      } catch (IOException e) {
+        LOG.error("Failed to write auth file to " + path, e);
+      }
+    }
+    accessManager = Optional.of(new AuthorizationManager(path));
   }
 
   private void addExceptionHandlers(final Javalin app) {
@@ -171,7 +206,17 @@ public class RestApiBuilder {
   }
 
   private Server createJettyServer() {
-    final Server server = new Server(InetSocketAddress.createUnresolved(listenAddress, port));
+    final Server server = new Server();
+    final ServerConnector connector;
+    if (maybeKeystorePath.isPresent()) {
+      connector = new ServerConnector(server, getSslContextFactory());
+    } else {
+      connector = new ServerConnector(server);
+    }
+    connector.setPort(port);
+    connector.setHost(listenAddress);
+    server.setConnectors(new Connector[] {connector});
+
     maxUrlLength.ifPresent(
         maxLength -> {
           LOG.debug("Setting Max URL length to {}", maxLength);
@@ -186,6 +231,25 @@ public class RestApiBuilder {
         });
     JettyUtil.INSTANCE.setLogIfNotStarted(false);
     return server;
+  }
+
+  private SslContextFactory getSslContextFactory() {
+    SslContextFactory sslContextFactory = new SslContextFactory.Server();
+    maybeKeystorePath.ifPresent(
+        keystorePath -> sslContextFactory.setKeyStorePath(keystorePath.toString()));
+    maybePasswordPath.ifPresentOrElse(
+        passwordPath -> {
+          try {
+            sslContextFactory.setKeyStorePassword(Files.readString(passwordPath, UTF_8).trim());
+          } catch (IOException e) {
+            LOG.error("Failed to read password file for validator api keystore", e);
+          }
+        },
+        () -> sslContextFactory.setKeyStorePassword(""));
+
+    sslContextFactory.setProvider("Conscrypt");
+
+    return sslContextFactory;
   }
 
   public interface RestApiExceptionHandler<T extends Exception> {

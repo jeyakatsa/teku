@@ -60,6 +60,12 @@ public class ValidatorRestApi {
         .endpoint(new GetKeys(keyManager))
         .endpoint(new DeleteKeys(keyManager))
         .endpoint(new PostKeys(keyManager))
+        .sslCertificate(config.getRestApiKeystoreFile(), config.getRestApiKeystorePasswordFile())
+        .passwordFilePath(
+            keyManager
+                .getDataDirLayout()
+                .getValidatorDataDirectory()
+                .resolve("validator-api-bearer"))
         .build();
   }
 }
